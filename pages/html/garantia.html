@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garantia</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Garantia</h1>
+        <form id="garantiaForm">
+            <label for="dataServico">Data do Serviço:</label>
+            <input type="date" id="dataServico" required>
+
+            <label for="prestadorGarantia">Prestador da Garantia:</label>
+            <input type="text" id="prestadorGarantia" required>
+
+            <label for="anexos">Anexar Documentos:</label>
+            <input type="file" id="anexos" multiple>
+
+            <button type="submit">Salvar Garantia</button>
+        </form>
+
+        <h2>Lista de Garantias</h2>
+        <table id="garantiaList">
+            <thead>
+                <tr>
+                    <th>Data do Serviço</th>
+                    <th>Prestador</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- As garantias registradas aparecerão aqui -->
+            </tbody>
+        </table>
+    </div>
+    <script src="../js/renderer.js"></script>
+</body>
+</html>

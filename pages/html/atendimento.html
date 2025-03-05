@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendimento</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Atendimento</h1>
+        <form id="atendimentoForm">
+            <label for="telefone">Telefone de Contato:</label>
+            <input type="text" id="telefone" name="telefone" required>
+
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="endereco">Endereço:</label>
+            <input type="text" id="endereco" name="endereco">
+
+            <label for="motivo">Motivo do Contato:</label>
+            <input type="text" id="motivo" name="motivo" required>
+
+            <label for="usuario">Quem Abriu o Chamado:</label>
+            <select id="usuario" name="usuario" required>
+                <!-- Lista de usuários cadastrados -->
+            </select>
+
+            <label for="anexos">Anexar Arquivos:</label>
+            <input type="file" id="anexos" name="anexos" multiple>
+
+            <button type="submit">Abrir Chamado</button>
+        </form>
+
+        <h2>Lista de Atendimentos</h2>
+        <table id="listaAtendimentos">
+            <thead>
+                <tr>
+                    <th>Telefone</th>
+                    <th>Nome</th>
+                    <th>Endereço</th>
+                    <th>Motivo</th>
+                    <th>Usuário</th>
+                    <th>Data de Início</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Lista de atendimentos será inserida aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal de Venda -->
+    <div id="modalVenda" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeVenda">&times;</span>
+            <h2>Venda</h2>
+            <form id="vendaForm">
+                <label for="produto">Produto Vendido:</label>
+                <input type="text" id="produto" name="produto" required>
+
+                <label for="precoCusto">Preço de Custo:</label>
+                <input type="number" id="precoCusto" name="precoCusto" required>
+
+                <label for="precoVenda">Preço de Venda:</label>
+                <input type="number" id="precoVenda" name="precoVenda" required>
+
+                <label for="dataVenda">Data da Venda:</label>
+                <input type="date" id="dataVenda" name="dataVenda" required>
+
+                <label for="vendedor">Nome do Vendedor:</label>
+                <input type="text" id="vendedor" name="vendedor" required>
+
+                <label for="anexosVenda">Anexar Arquivos:</label>
+                <input type="file" id="anexosVenda" name="anexosVenda" multiple>
+
+                <button type="submit">Salvar Venda</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Garantia -->
+    <div id="modalGarantia" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeGarantia">&times;</span>
+            <h2>Garantia</h2>
+            <form id="garantiaForm">
+                <label for="dataServico">Data do Serviço:</label>
+                <input type="date" id="dataServico" name="dataServico" required>
+
+                <label for="prestador">Prestador da Garantia:</label>
+                <input type="text" id="prestador" name="prestador" required>
+
+                <label for="anexosGarantia">Anexar Arquivos:</label>
+                <input type="file" id="anexosGarantia" name="anexosGarantia" multiple>
+
+                <button type="submit">Salvar Garantia</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/renderer.js"></script>
+</body>
+</html>

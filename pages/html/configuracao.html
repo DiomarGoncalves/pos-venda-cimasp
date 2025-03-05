@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Configuração do Sistema</h1>
+        <form id="configForm">
+            <label for="userAccess">Gerenciar Acesso de Usuários:</label>
+            <select id="userAccess" name="userAccess">
+                <option value="admin">Administrador</option>
+                <option value="user">Usuário Comum</option>
+            </select>
+
+            <label for="commissionAccess">Acesso à Tela de Comissões:</label>
+            <select id="commissionAccess" name="commissionAccess">
+                <option value="yes">Sim</option>
+                <option value="no">Não</option>
+            </select>
+
+            <button type="submit">Salvar Configurações</button>
+        </form>
+        
+        <div id="configList">
+            <h2>Configurações Atuais</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Acesso</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lista de configurações será gerada aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../js/renderer.js"></script>
+</body>
+</html>
