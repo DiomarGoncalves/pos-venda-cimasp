@@ -4,43 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuração</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Configuração do Sistema</h1>
-        <form id="configForm">
-            <label for="userAccess">Gerenciar Acesso de Usuários:</label>
-            <select id="userAccess" name="userAccess">
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
+        <h1 class="text-xl">Configuração</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="p-6">
+        <h2 class="text-2xl mb-4">Configuração do Sistema</h2>
+        <form id="configForm" class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <label for="userAccess" class="block">Gerenciar Acesso de Usuários:</label>
+            <select id="userAccess" name="userAccess" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
                 <option value="admin">Administrador</option>
                 <option value="user">Usuário Comum</option>
             </select>
 
-            <label for="commissionAccess">Acesso à Tela de Comissões:</label>
-            <select id="commissionAccess" name="commissionAccess">
+            <label for="commissionAccess" class="block">Acesso à Tela de Comissões:</label>
+            <select id="commissionAccess" name="commissionAccess" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
                 <option value="yes">Sim</option>
                 <option value="no">Não</option>
             </select>
 
-            <button type="submit">Salvar Configurações</button>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Configurações</button>
         </form>
-        
-        <div id="configList">
-            <h2>Configurações Atuais</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuário</th>
-                        <th>Acesso</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lista de configurações será gerada aqui -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <script src="../js/renderer.js"></script>
+
+        <h2 class="text-2xl mt-6 mb-4">Configurações Atuais</h2>
+        <table class="w-full text-left border border-gray-700">
+            <thead>
+                <tr class="bg-gray-800">
+                    <th class="p-2 border border-gray-700">Usuário</th>
+                    <th class="p-2 border border-gray-700">Acesso</th>
+                    <th class="p-2 border border-gray-700">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="configList">
+                <!-- As configurações serão carregadas aqui -->
+            </tbody>
+        </table>
+    </main>
+    <footer class="bg-gray-800 p-4 text-center">
+        <p>&copy; 2025 Sistema de Ponto de Venda</p>
+    </footer>
+    <script src="../js/configuracao.js"></script>
 </body>
 </html>

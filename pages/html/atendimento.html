@@ -1,106 +1,116 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atendimento</title>
-    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Atendimento</h1>
-        <form id="atendimentoForm">
-            <label for="telefone">Telefone de Contato:</label>
-            <input type="text" id="telefone" name="telefone" required>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
+        <h1 class="text-xl">Atendimento</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="p-6">
+        <h2 class="text-2xl mb-4">Registrar Atendimento</h2>
+        <form id="atendimentoForm" class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <label for="telefone" class="block">Telefone de Contato:</label>
+            <input type="text" id="telefone" name="telefone" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" name="nome" required>
+            <label for="nome" class="block">Nome:</label>
+            <input type="text" id="nome" name="nome" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-            <label for="endereco">Endereço:</label>
-            <input type="text" id="endereco" name="endereco">
+            <label for="endereco" class="block">Endereço:</label>
+            <input type="text" id="endereco" name="endereco" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-            <label for="motivo">Motivo do Contato:</label>
-            <input type="text" id="motivo" name="motivo" required>
+            <label for="motivo" class="block">Motivo do Contato:</label>
+            <input type="text" id="motivo" name="motivo" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-            <label for="usuario">Quem Abriu o Chamado:</label>
-            <select id="usuario" name="usuario" required>
-                <!-- Lista de usuários cadastrados -->
-            </select>
+            <label for="usuario" class="block">Quem Abriu o Chamado:</label>
+            <select id="usuario" name="usuario" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600"></select>
 
-            <label for="anexos">Anexar Arquivos:</label>
-            <input type="file" id="anexos" name="anexos" multiple>
+            <label for="anexos" class="block">Anexar Arquivos:</label>
+            <input type="file" id="anexos" name="anexos" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
 
-            <button type="submit">Abrir Chamado</button>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Abrir Chamado</button>
         </form>
 
-        <h2>Lista de Atendimentos</h2>
-        <table id="listaAtendimentos">
+        <h2 class="text-2xl mt-6 mb-4">Lista de Atendimentos</h2>
+        <table class="w-full text-left border border-gray-700">
             <thead>
-                <tr>
-                    <th>Telefone</th>
-                    <th>Nome</th>
-                    <th>Endereço</th>
-                    <th>Motivo</th>
-                    <th>Usuário</th>
-                    <th>Data de Início</th>
-                    <th>Ações</th>
+                <tr class="bg-gray-800">
+                    <th class="p-2 border border-gray-700">Telefone</th>
+                    <th class="p-2 border border-gray-700">Nome</th>
+                    <th class="p-2 border border-gray-700">Endereço</th>
+                    <th class="p-2 border border-gray-700">Motivo</th>
+                    <th class="p-2 border border-gray-700">Usuário</th>
+                    <th class="p-2 border border-gray-700">Data Início</th>
+                    <th class="p-2 border border-gray-700">Ações</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Lista de atendimentos será inserida aqui -->
+            <tbody id="listaAtendimentos">
+                <!-- Os atendimentos serão carregados aqui -->
             </tbody>
         </table>
-    </div>
+    </main>
+    <footer class="bg-gray-800 p-4 text-center">
+        <p>&copy; 2025 Sistema de Ponto de Venda</p>
+    </footer>
 
-    <!-- Modal de Venda -->
-    <div id="modalVenda" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeVenda">&times;</span>
-            <h2>Venda</h2>
+    <!-- Modal Venda -->
+    <div id="modalVenda" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 class="text-2xl mb-4">Venda</h2>
             <form id="vendaForm">
-                <label for="produto">Produto Vendido:</label>
-                <input type="text" id="produto" name="produto" required>
+                <label for="produto" class="block">Produto:</label>
+                <input type="text" id="produto" name="produto" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="precoCusto">Preço de Custo:</label>
-                <input type="number" id="precoCusto" name="precoCusto" required>
+                <label for="precoCusto" class="block">Preço de Custo:</label>
+                <input type="number" id="precoCusto" name="precoCusto" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="precoVenda">Preço de Venda:</label>
-                <input type="number" id="precoVenda" name="precoVenda" required>
+                <label for="precoVenda" class="block">Preço de Venda:</label>
+                <input type="number" id="precoVenda" name="precoVenda" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="dataVenda">Data da Venda:</label>
-                <input type="date" id="dataVenda" name="dataVenda" required>
+                <label for="dataVenda" class="block">Data da Venda:</label>
+                <input type="date" id="dataVenda" name="dataVenda" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="vendedor">Nome do Vendedor:</label>
-                <input type="text" id="vendedor" name="vendedor" required>
+                <label for="vendedor" class="block">Nome do Vendedor:</label>
+                <input type="text" id="vendedor" name="vendedor" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="anexosVenda">Anexar Arquivos:</label>
-                <input type="file" id="anexosVenda" name="anexosVenda" multiple>
+                <label for="anexosVenda" class="block">Anexar Arquivos:</label>
+                <input type="file" id="anexosVenda" name="anexosVenda" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
 
-                <button type="submit">Salvar Venda</button>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Venda</button>
+                <button type="button" id="closeVenda" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Garantia -->
-    <div id="modalGarantia" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeGarantia">&times;</span>
-            <h2>Garantia</h2>
+    <!-- Modal Garantia -->
+    <div id="modalGarantia" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 class="text-2xl mb-4">Garantia</h2>
             <form id="garantiaForm">
-                <label for="dataServico">Data do Serviço:</label>
-                <input type="date" id="dataServico" name="dataServico" required>
+                <label for="dataServico" class="block">Data do Serviço:</label>
+                <input type="date" id="dataServico" name="dataServico" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="prestador">Prestador da Garantia:</label>
-                <input type="text" id="prestador" name="prestador" required>
+                <label for="prestador" class="block">Prestador:</label>
+                <input type="text" id="prestador" name="prestador" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
-                <label for="anexosGarantia">Anexar Arquivos:</label>
-                <input type="file" id="anexosGarantia" name="anexosGarantia" multiple>
+                <label for="anexosGarantia" class="block">Anexar Arquivos:</label>
+                <input type="file" id="anexosGarantia" name="anexosGarantia" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
 
-                <button type="submit">Salvar Garantia</button>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Garantia</button>
+                <button type="button" id="closeGarantia" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
             </form>
         </div>
     </div>
 
-    <script src="js/renderer.js"></script>
+    <script src="../js/atendimento.js"></script>
 </body>
 </html>
