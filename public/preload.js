@@ -2,14 +2,68 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Exposing safe methods to the renderer process
 contextBridge.exposeInMainWorld('api', {
-  openVendaModal: () => ipcRenderer.send('open-venda-modal'),
-  openGarantiaModal: () => ipcRenderer.send('open-garantia-modal'),
-  openAtendimentoModal: () => ipcRenderer.send('open-atendimento-modal'),
-  openComissao: () => ipcRenderer.send('open-comissao'),
-  openConfiguracao: () => ipcRenderer.send('open-configuracao'),
-  inserirAtendimento: (atendimento) => ipcRenderer.invoke('inserir-atendimento', atendimento),
-  excluirAtendimento: (id) => ipcRenderer.invoke('excluir-atendimento', id),
-  listarAtendimentos: () => ipcRenderer.invoke('listar-atendimentos'),
-  login: (username, password) => ipcRenderer.invoke('login', username, password),
-  cadastrarUsuario: (username, password) => ipcRenderer.invoke('cadastrar-usuario', username, password)
+  openVendaModal: () => {
+    console.log('Abrindo modal de venda'); // Log para depuração
+    ipcRenderer.send('open-venda-modal');
+  },
+  openGarantiaModal: () => {
+    console.log('Abrindo modal de garantia'); // Log para depuração
+    ipcRenderer.send('open-garantia-modal');
+  },
+  openAtendimentoModal: () => {
+    console.log('Abrindo modal de atendimento'); // Log para depuração
+    ipcRenderer.send('open-atendimento-modal');
+  },
+  openComissao: () => {
+    console.log('Abrindo comissao'); // Log para depuração
+    ipcRenderer.send('open-comissao');
+  },
+  openConfiguracao: () => {
+    console.log('Abrindo configuracao'); // Log para depuração
+    ipcRenderer.send('open-configuracao');
+  },
+  inserirAtendimento: (atendimento) => {
+    console.log('Inserindo atendimento', atendimento); // Log para depuração
+    return ipcRenderer.invoke('inserir-atendimento', atendimento);
+  },
+  excluirAtendimento: (id) => {
+    console.log('Excluindo atendimento com ID:', id); // Log para depuração
+    return ipcRenderer.invoke('excluir-atendimento', id);
+  },
+  listarAtendimentos: () => {
+    console.log('Listando atendimentos'); // Log para depuração
+    return ipcRenderer.invoke('listar-atendimentos');
+  },
+  inserirVenda: (venda) => {
+    console.log('Inserindo venda', venda); // Log para depuração
+    return ipcRenderer.invoke('inserir-venda', venda);
+  },
+  listarVendas: () => {
+    console.log('Listando vendas'); // Log para depuração
+    return ipcRenderer.invoke('listar-vendas');
+  },
+  excluirVenda: (id) => {
+    console.log('Excluindo venda com ID:', id); // Log para depuração
+    return ipcRenderer.invoke('excluir-venda', id);
+  },
+  inserirGarantia: (garantia) => {
+    console.log('Inserindo garantia', garantia); // Log para depuração
+    return ipcRenderer.invoke('inserir-garantia', garantia);
+  },
+  inserirAnexos: (id, formData) => {
+    console.log('Inserindo anexos para venda com ID:', id); // Log para depuração
+    return ipcRenderer.invoke('inserir-anexos', id, formData);
+  },
+  login: (username, password) => {
+    console.log('Login com username:', username); // Log para depuração
+    return ipcRenderer.invoke('login', username, password);
+  },
+  cadastrarUsuario: (username, password) => {
+    console.log('Cadastrando usuario', username); // Log para depuração
+    return ipcRenderer.invoke('cadastrar-usuario', username, password);
+  },
+  listarUsuarios: () => {
+    console.log('Listando usuarios'); // Log para depuração
+    return ipcRenderer.invoke('listar-usuarios');
+  }
 });

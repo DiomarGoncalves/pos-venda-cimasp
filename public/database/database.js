@@ -20,29 +20,51 @@ db.serialize(() => {
         usuario_id INTEGER NOT NULL,
         data_inicio TEXT NOT NULL,
         anexos TEXT,
+        status TEXT NOT NULL DEFAULT 'aberto',
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS vendas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         atendimento_id INTEGER NOT NULL,
+        telefone TEXT NOT NULL,
+        nome TEXT NOT NULL,
+        endereco TEXT,
+        motivo TEXT NOT NULL,
+        usuario_id INTEGER NOT NULL,
+        data_inicio TEXT NOT NULL,
+        anexos TEXT,
+        status TEXT NOT NULL DEFAULT 'fechado',
         produto TEXT NOT NULL,
         preco_custo REAL NOT NULL,
         preco_venda REAL NOT NULL,
         data_venda TEXT NOT NULL,
         vendedor TEXT NOT NULL,
-        anexos TEXT,
         FOREIGN KEY (atendimento_id) REFERENCES atendimentos(id)
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS garantias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         atendimento_id INTEGER NOT NULL,
+        telefone TEXT NOT NULL,
+        nome TEXT NOT NULL,
+        endereco TEXT,
+        motivo TEXT NOT NULL,
+        usuario_id INTEGER NOT NULL,
+        data_inicio TEXT NOT NULL,
+        anexos TEXT,
+        status TEXT NOT NULL DEFAULT 'fechado',
         data_servico TEXT NOT NULL,
         prestador TEXT NOT NULL,
-        anexos TEXT,
         FOREIGN KEY (atendimento_id) REFERENCES atendimentos(id)
     )`);
+
+    // Adicionar coluna status na tabela atendimentos se não existir
+    db.run(`ALTER TABLE atendimentos ADD COLUMN status TEXT NOT NULL DEFAULT 'aberto'`, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+            console.error('Erro ao adicionar coluna status:', err.message);
+        }
+    });
 });
 
 // Funções para inserir dados
@@ -65,35 +87,53 @@ function inserirAtendimento(telefone, nome, endereco, motivo, usuario_id, data_i
                 if (err) {
                     reject(err);
                 } else {
+                    console.log('Atendimento inserido com ID:', this.lastID); // Log para depuração
                     resolve(this.lastID);
                 }
             });
     });
 }
 
-function inserirVenda(atendimento_id, produto, preco_custo, preco_venda, data_venda, vendedor, anexos) {
+function inserirVenda(atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, produto, preco_custo, preco_venda, data_venda, vendedor) {
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO vendas (atendimento_id, produto, preco_custo, preco_venda, data_venda, vendedor, anexos) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [atendimento_id, produto, preco_custo, preco_venda, data_venda, vendedor, anexos], function(err) {
+        console.log('Dados recebidos para inserir venda:', { atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, produto, preco_custo, preco_venda, data_venda, vendedor }); // Log para depuração
+        db.run(`INSERT INTO vendas (atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, produto, preco_custo, preco_venda, data_venda, vendedor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, produto, preco_custo, preco_venda, data_venda, vendedor], function(err) {
                 if (err) {
+                    console.error('Erro ao inserir venda:', err.message); // Log para depuração
                     reject(err);
                 } else {
+                    console.log('Venda inserida com ID:', this.lastID); // Log para depuração
                     resolve(this.lastID);
                 }
             });
     });
 }
 
-function inserirGarantia(atendimento_id, data_servico, prestador, anexos) {
+function inserirGarantia(atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, data_servico, prestador) {
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO garantias (atendimento_id, data_servico, prestador, anexos) VALUES (?, ?, ?, ?)`,
-            [atendimento_id, data_servico, prestador, anexos], function(err) {
+        db.run(`INSERT INTO garantias (atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, data_servico, prestador) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [atendimento_id, telefone, nome, endereco, motivo, usuario_id, data_inicio, anexos, data_servico, prestador], function(err) {
                 if (err) {
                     reject(err);
                 } else {
+                    console.log('Garantia inserida com ID:', this.lastID); // Log para depuração
                     resolve(this.lastID);
                 }
             });
+    });
+}
+
+function inserirAnexos(id, anexosStr) {
+    return new Promise((resolve, reject) => {
+        db.run(`UPDATE vendas SET anexos = ? WHERE id = ?`, [anexosStr, id], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                console.log('Anexos inseridos com sucesso para venda com ID:', id); // Log para depuração
+                resolve(this.changes);
+            }
+        });
     });
 }
 
@@ -112,7 +152,7 @@ function listarUsuarios() {
 
 function listarAtendimentos() {
     return new Promise((resolve, reject) => {
-        db.all(`SELECT * FROM atendimentos`, [], (err, rows) => {
+        db.all(`SELECT * FROM atendimentos WHERE status = 'aberto'`, [], (err, rows) => {
             if (err) {
                 reject(err);
             } else {
@@ -173,6 +213,18 @@ function excluirAtendimento(id) {
     });
 }
 
+function excluirVenda(id) {
+    return new Promise((resolve, reject) => {
+        db.run(`DELETE FROM vendas WHERE id = ?`, [id], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(this.changes);
+            }
+        });
+    });
+}
+
 // Função para autenticar usuário
 function autenticarUsuario(username, password) {
     return new Promise((resolve, reject) => {
@@ -191,11 +243,13 @@ module.exports = {
     inserirAtendimento,
     inserirVenda,
     inserirGarantia,
+    inserirAnexos,
     listarUsuarios,
     listarAtendimentos,
     listarVendas,
     listarGarantias,
     editarAtendimento,
     excluirAtendimento,
+    excluirVenda,
     autenticarUsuario
 };

@@ -4,37 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Garantia</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Registro de Garantia</h1>
-        <form id="garantiaForm">
-            <label for="dataServico">Data do Serviço:</label>
-            <input type="date" id="dataServico" required>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
+        <h1 class="text-xl">garantias</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold my-4">Registro de Garantia</h1>
+        
+        <form id="garantiaForm" class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <label for="dataServico" class="block text-sm font-medium">Data do Serviço:</label>
+            <input type="date" id="dataServico" required class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
 
-            <label for="prestadorGarantia">Prestador da Garantia:</label>
-            <input type="text" id="prestadorGarantia" required>
+            <label for="prestadorGarantia" class="block text-sm font-medium mt-4">Prestador da Garantia:</label>
+            <input type="text" id="prestadorGarantia" required class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
 
-            <label for="anexos">Anexar Documentos:</label>
-            <input type="file" id="anexos" multiple>
+            <label for="anexos" class="block text-sm font-medium mt-4">Anexar Documentos:</label>
+            <input type="file" id="anexos" multiple class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
 
-            <button type="submit">Salvar Garantia</button>
+            <button type="submit" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Salvar Garantia</button>
         </form>
 
-        <h2>Lista de Garantias</h2>
-        <table id="garantiaList">
-            <thead>
-                <tr>
-                    <th>Data do Serviço</th>
-                    <th>Prestador</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- As garantias registradas aparecerão aqui -->
-            </tbody>
-        </table>
+        <h2 class="text-xl font-bold my-6">Lista de Garantias</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full bg-gray-800 rounded-lg shadow-md">
+                <thead>
+                    <tr class="bg-gray-700 text-left text-white">
+                        <th class="p-3">Data do Serviço</th>
+                        <th class="p-3">Prestador</th>
+                        <th class="p-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="garantiaList" class="text-gray-300">
+                    <!-- As garantias registradas aparecerão aqui -->
+                </tbody>
+            </table>
+        </div>
     </div>
     <script src="../js/renderer.js"></script>
 </body>
