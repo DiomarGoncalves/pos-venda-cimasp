@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-
   const atendimentoForm = document.getElementById('atendimentoForm');
-  const listaAtendimentos = document.getElementById('listaAtendimentos')?.getElementsByTagName('tbody')[0];
+  const listaAtendimentos = document.getElementById('listaAtendimentos');
   const usuarioSelect = document.getElementById('usuario');
   const modalVenda = document.getElementById('modalVenda');
   const modalGarantia = document.getElementById('modalGarantia');
@@ -9,9 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeGarantia = document.getElementById('closeGarantia');
   const vendaForm = document.getElementById('vendaForm');
   const garantiaForm = document.getElementById('garantiaForm');
-  let atendimentoId; // Definir atendimentoId no escopo correto
-  let atendimentoRow; // Definir atendimentoRow no escopo correto
-  let atendimentoData; // Definir atendimentoData no escopo correto
+  let atendimentoId;
+  let atendimentoRow;
+  let atendimentoData;
 
   // Carregar usuários existentes
   async function carregarUsuarios() {
@@ -39,10 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         motivo: formData.get('motivo'),
         usuario_id: formData.get('usuario'),
         data_inicio: new Date().toLocaleString(),
-        anexos: formData.getAll('anexos').map(file => file.name).join(',') // Salvar nomes dos arquivos
+        anexos: formData.getAll('anexos').map(file => file.name).join(',')
       };
-      atendimentoId = await window.api.inserirAtendimento(atendimento); // Atualizar atendimentoId
-      console.log('Atendimento inserido com ID:', atendimentoId); // Log para depuração
+      atendimentoId = await window.api.inserirAtendimento(atendimento);
       atendimento.id = atendimentoId;
       adicionarAtendimento(atendimento);
       atendimentoForm.reset();
@@ -75,15 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
       listaAtendimentos.deleteRow(row.rowIndex - 1);
     }
 
-    function editarAtendimento(row, id) {
-      // Implementar lógica de edição
-    }
-
     function abrirModal(modal, id, row, atendimento) {
-      atendimentoId = id; // Atualizar atendimentoId ao abrir o modal
-      atendimentoRow = row; // Atualizar atendimentoRow ao abrir o modal
-      atendimentoData = atendimento; // Atualizar atendimentoData ao abrir o modal
-      console.log('Abrindo modal com atendimento ID:', atendimentoId); // Log para depuração
+      atendimentoId = id;
+      atendimentoRow = row;
+      atendimentoData = atendimento;
       modal.classList.remove('hidden');
     }
 
@@ -108,18 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
       vendaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(vendaForm);
-        const produto = formData.get('produto');
-        const precoCusto = formData.get('precoCusto');
-        const precoVenda = formData.get('precoVenda');
-        const dataVenda = formData.get('dataVenda');
-        const vendedor = formData.get('vendedor');
-        console.log('Produto:', produto); // Log para depuração
-        console.log('Preço de Custo:', precoCusto); // Log para depuração
-        console.log('Preço de Venda:', precoVenda); // Log para depuração
-        console.log('Data da Venda:', dataVenda); // Log para depuração
-        console.log('Vendedor:', vendedor); // Log para depuração
         const venda = {
-          atendimento_id: atendimentoId, // Usar atendimentoId do escopo correto
+          atendimento_id: atendimentoId,
           telefone: atendimentoData.telefone,
           nome: atendimentoData.nome,
           endereco: atendimentoData.endereco,
@@ -127,16 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
           usuario_id: atendimentoData.usuario_id,
           data_inicio: atendimentoData.data_inicio,
           anexos: atendimentoData.anexos,
-          produto: produto,
-          preco_custo: precoCusto,
-          preco_venda: precoVenda,
-          data_venda: dataVenda,
-          vendedor: vendedor
+          produto: formData.get('produto'),
+          preco_custo: formData.get('precoCusto'),
+          preco_venda: formData.get('precoVenda'),
+          data_venda: formData.get('dataVenda'),
+          vendedor: formData.get('vendedor')
         };
-        console.log('Dados da venda:', venda); // Log para depuração
         await window.api.inserirVenda(venda);
-        await window.api.excluirAtendimento(atendimentoId); // Atualizar status do atendimento para "fechado"
-        listaAtendimentos.deleteRow(atendimentoRow.rowIndex); // Remover atendimento da lista
+        await window.api.excluirAtendimento(atendimentoId);
+        listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalVenda.classList.add('hidden');
       });
     }
@@ -146,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const formData = new FormData(garantiaForm);
         const garantia = {
-          atendimento_id: atendimentoId, // Usar atendimentoId do escopo correto
+          atendimento_id: atendimentoId,
           telefone: atendimentoData.telefone,
           nome: atendimentoData.nome,
           endereco: atendimentoData.endereco,
@@ -157,15 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
           data_servico: formData.get('dataServico'),
           prestador: formData.get('prestador')
         };
-        console.log('Dados da garantia:', garantia); // Log para depuração
         await window.api.inserirGarantia(garantia);
-        await window.api.excluirAtendimento(atendimentoId); // Atualizar status do atendimento para "fechado"
-        listaAtendimentos.deleteRow(atendimentoRow.rowIndex); // Remover atendimento da lista
+        await window.api.excluirAtendimento(atendimentoId);
+        listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalGarantia.classList.add('hidden');
       });
     }
 
-    // Carregar atendimentos existentes
     (async () => {
       const atendimentos = await window.api.listarAtendimentos();
       atendimentos.forEach(adicionarAtendimento);

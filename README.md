@@ -63,6 +63,7 @@ O projeto é organizado da seguinte forma:
 - Tela de comissões para calcular e gerenciar comissões de vendas.
 - Tela de configuração para administradores ajustarem parâmetros do sistema.
 - Exportação de listas em formatos Excel e PDF.
+- Filtros inteligentes por datas, nome, cliente e vendedor.
 
 ## Contribuição
 

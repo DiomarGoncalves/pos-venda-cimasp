@@ -59,6 +59,19 @@ db.serialize(() => {
         FOREIGN KEY (atendimento_id) REFERENCES atendimentos(id)
     )`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS comissoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        venda_id INTEGER NOT NULL,
+        porcentagem REAL NOT NULL,
+        FOREIGN KEY (venda_id) REFERENCES vendas(id)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS configuracoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        acesso TEXT NOT NULL
+    )`);
+
     // Adicionar coluna status na tabela atendimentos se não existir
     db.run(`ALTER TABLE atendimentos ADD COLUMN status TEXT NOT NULL DEFAULT 'aberto'`, (err) => {
         if (err && !err.message.includes('duplicate column name')) {
@@ -118,6 +131,19 @@ function inserirGarantia(atendimento_id, telefone, nome, endereco, motivo, usuar
                     reject(err);
                 } else {
                     console.log('Garantia inserida com ID:', this.lastID); // Log para depuração
+                    resolve(this.lastID);
+                }
+            });
+    });
+}
+
+function inserirComissao(venda_id, porcentagem) {
+    return new Promise((resolve, reject) => {
+        db.run(`INSERT INTO comissoes (venda_id, porcentagem) VALUES (?, ?)`,
+            [venda_id, porcentagem], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
                     resolve(this.lastID);
                 }
             });
@@ -186,6 +212,30 @@ function listarGarantias() {
     });
 }
 
+function listarComissoes() {
+    return new Promise((resolve, reject) => {
+        db.all(`SELECT * FROM comissoes`, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+function listarConfiguracoes() {
+    return new Promise((resolve, reject) => {
+        db.all(`SELECT * FROM configuracoes`, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
 // Funções para editar dados
 function editarAtendimento(id, telefone, nome, endereco, motivo, usuario_id, anexos) {
     return new Promise((resolve, reject) => {
@@ -225,6 +275,18 @@ function excluirVenda(id) {
     });
 }
 
+function excluirConfiguracao(id) {
+    return new Promise((resolve, reject) => {
+        db.run(`DELETE FROM configuracoes WHERE id = ?`, [id], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(this.changes);
+            }
+        });
+    });
+}
+
 // Função para autenticar usuário
 function autenticarUsuario(username, password) {
     return new Promise((resolve, reject) => {
@@ -238,18 +300,36 @@ function autenticarUsuario(username, password) {
     });
 }
 
+function salvarConfiguracao(usuario, acesso) {
+    return new Promise((resolve, reject) => {
+        db.run(`INSERT INTO configuracoes (usuario, acesso) VALUES (?, ?)`,
+            [usuario, acesso], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(this.lastID);
+                }
+            });
+    });
+}
+
 module.exports = {
     inserirUsuario,
     inserirAtendimento,
     inserirVenda,
     inserirGarantia,
+    inserirComissao,
     inserirAnexos,
     listarUsuarios,
     listarAtendimentos,
     listarVendas,
     listarGarantias,
+    listarComissoes,
+    listarConfiguracoes,
     editarAtendimento,
     excluirAtendimento,
     excluirVenda,
-    autenticarUsuario
+    excluirConfiguracao,
+    autenticarUsuario,
+    salvarConfiguracao
 };

@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Ponto de Venda</title>
+    <title>Atendimento</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-white">
     <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
-        <img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40">
-        <h1 class="text-xl"> Pos-venda</h1>
+        <a href="index.html" class="text-blue-400 hover:text-blue-300"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
+        <h1 class="text-xl">Atendimento</h1>
         <nav>
             <ul class="flex space-x-4">
-                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">inicio</a></li>
+                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">Inicio</a></li>
             </ul>
         </nav>
     </header>
-    <main class="flex flex-col items-center justify-center p-6">
-        <h2 class="text-2xl mb-4">Atendimento</h2>
-        <form id="atendimentoForm" class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+    <main class="p-6">
+        <h2 class="text-2xl mb-4">Registrar Atendimento</h2>
+        <form id="atendimentoForm" class="bg-gray-800 p-6 rounded-lg shadow-lg">
             <label for="telefone" class="block">Telefone de Contato:</label>
             <input type="text" id="telefone" name="telefone" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
 
@@ -40,19 +40,22 @@
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Abrir Chamado</button>
         </form>
 
-        <table id="listaAtendimentos" class="bg-gray-800 w-full max-w-4xl mt-6 rounded-lg shadow-lg">
+        <h2 class="text-2xl mt-6 mb-4">Lista de Atendimentos</h2>
+        <table class="w-full text-left border border-gray-700">
             <thead>
-                <tr>
-                    <th class="p-2">Telefone</th>
-                    <th class="p-2">Nome</th>
-                    <th class="p-2">Endereço</th>
-                    <th class="p-2">Motivo</th>
-                    <th class="p-2">Usuário</th>
-                    <th class="p-2">Data Início</th>
-                    <th class="p-2">Ações</th>
+                <tr class="bg-gray-800">
+                    <th class="p-2 border border-gray-700">Telefone</th>
+                    <th class="p-2 border border-gray-700">Nome</th>
+                    <th class="p-2 border border-gray-700">Endereço</th>
+                    <th class="p-2 border border-gray-700">Motivo</th>
+                    <th class="p-2 border border-gray-700">Usuário</th>
+                    <th class="p-2 border border-gray-700">Data Início</th>
+                    <th class="p-2 border border-gray-700">Ações</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="listaAtendimentos">
+                <!-- Os atendimentos serão carregados aqui -->
+            </tbody>
         </table>
     </main>
     <footer class="bg-gray-800 p-4 text-center">

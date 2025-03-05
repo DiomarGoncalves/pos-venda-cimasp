@@ -50,6 +50,10 @@ contextBridge.exposeInMainWorld('api', {
     console.log('Inserindo garantia', garantia); // Log para depuração
     return ipcRenderer.invoke('inserir-garantia', garantia);
   },
+  listarGarantias: () => {
+    console.log('Listando garantias'); // Log para depuração
+    return ipcRenderer.invoke('listar-garantias');
+  },
   inserirAnexos: (id, formData) => {
     console.log('Inserindo anexos para venda com ID:', id); // Log para depuração
     return ipcRenderer.invoke('inserir-anexos', id, formData);
@@ -65,5 +69,25 @@ contextBridge.exposeInMainWorld('api', {
   listarUsuarios: () => {
     console.log('Listando usuarios'); // Log para depuração
     return ipcRenderer.invoke('listar-usuarios');
+  },
+  inserirComissao: (comissao) => {
+    console.log('Inserindo comissão', comissao); // Log para depuração
+    return ipcRenderer.invoke('inserir-comissao', comissao);
+  },
+  listarComissoes: () => {
+    console.log('Listando comissões'); // Log para depuração
+    return ipcRenderer.invoke('listar-comissoes');
+  },
+  listarConfiguracoes: () => {
+    console.log('Listando configurações'); // Log para depuração
+    return ipcRenderer.invoke('listar-configuracoes');
+  },
+  salvarConfiguracao: (configuracao) => {
+    console.log('Salvando configuração', configuracao); // Log para depuração
+    return ipcRenderer.invoke('salvar-configuracao', configuracao);
+  },
+  excluirConfiguracao: (id) => {
+    console.log('Excluindo configuração com ID:', id); // Log para depuração
+    return ipcRenderer.invoke('excluir-configuracao', id);
   }
 });

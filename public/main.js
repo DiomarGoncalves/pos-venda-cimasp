@@ -138,3 +138,33 @@ ipcMain.handle('inserir-anexos', async (event, id, files) => {
   }
   return await db.inserirAnexos(id, anexos.join(','));
 });
+
+ipcMain.handle('listar-garantias', async () => {
+  console.log('Listando garantias'); // Log para depuração
+  return await db.listarGarantias();
+});
+
+ipcMain.handle('inserir-comissao', async (event, comissao) => {
+  console.log('Inserindo comissão', comissao); // Log para depuração
+  return await db.inserirComissao(comissao.venda_id, comissao.porcentagem);
+});
+
+ipcMain.handle('listar-comissoes', async () => {
+  console.log('Listando comissões'); // Log para depuração
+  return await db.listarComissoes();
+});
+
+ipcMain.handle('listar-configuracoes', async () => {
+  console.log('Listando configurações'); // Log para depuração
+  return await db.listarConfiguracoes();
+});
+
+ipcMain.handle('salvar-configuracao', async (event, configuracao) => {
+  console.log('Salvando configuração', configuracao); // Log para depuração
+  return await db.salvarConfiguracao(configuracao.usuario, configuracao.acesso);
+});
+
+ipcMain.handle('excluir-configuracao', async (event, id) => {
+  console.log('Excluindo configuração com ID:', id); // Log para depuração
+  return await db.excluirConfiguracao(id);
+});

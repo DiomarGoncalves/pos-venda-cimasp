@@ -33,6 +33,19 @@
         </form>
 
         <h2 class="text-xl font-bold my-6">Lista de Garantias</h2>
+        <div class="mb-4">
+            <label for="filtroDataInicio" class="block">Data Início:</label>
+            <input type="date" id="filtroDataInicio" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
+            <label for="filtroDataFim" class="block">Data Fim:</label>
+            <input type="date" id="filtroDataFim" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
+            <label for="filtroNome" class="block">Nome:</label>
+            <input type="text" id="filtroNome" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
+            <label for="filtroCliente" class="block">Cliente:</label>
+            <input type="text" id="filtroCliente" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
+            <label for="filtroVendedor" class="block">Vendedor:</label>
+            <input type="text" id="filtroVendedor" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
+            <button id="aplicarFiltros" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Aplicar Filtros</button>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full bg-gray-800 rounded-lg shadow-md">
                 <thead>
@@ -46,6 +59,10 @@
                     <!-- As garantias registradas aparecerão aqui -->
                 </tbody>
             </table>
+        </div>
+        <div class="mt-4">
+            <button id="exportarExcel" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Exportar para Excel</button>
+            <button id="exportarPDF" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Exportar para PDF</button>
         </div>
     </div>
     <script src="../js/renderer.js"></script>
