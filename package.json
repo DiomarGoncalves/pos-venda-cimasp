@@ -8,6 +8,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
+  "author": "Diomar Gonçalves",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
     "express": "^4.17.1",

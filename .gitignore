@@ -18,6 +18,7 @@ Thumbs.db
 # Arquivos de build
 dist/
 build/
+out/
 
 # Arquivos de ambiente
 .env
