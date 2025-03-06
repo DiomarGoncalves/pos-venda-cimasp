@@ -86,7 +86,10 @@ ipcMain.handle('inserir-venda', async (event, venda) => {
       venda.preco_custo,
       venda.preco_venda,
       venda.data_venda,
-      venda.vendedor
+      venda.vendedor,
+      venda.cliente,
+      venda.nota_fiscal,
+      venda.pedido_venda
     );
     return vendaId;
   } catch (error) {
@@ -167,4 +170,9 @@ ipcMain.handle('salvar-configuracao', async (event, configuracao) => {
 ipcMain.handle('excluir-configuracao', async (event, id) => {
   console.log('Excluindo configuração com ID:', id); // Log para depuração
   return await db.excluirConfiguracao(id);
+});
+
+ipcMain.handle('mover-para-historico', async (event, id) => {
+  console.log('Movendo atendimento para histórico com ID:', id); // Log para depuração
+  return await db.excluirAtendimento(id);
 });

@@ -89,5 +89,9 @@ contextBridge.exposeInMainWorld('api', {
   excluirConfiguracao: (id) => {
     console.log('Excluindo configuração com ID:', id); // Log para depuração
     return ipcRenderer.invoke('excluir-configuracao', id);
+  },
+  moverParaHistorico: (id) => {
+    console.log('Movendo atendimento para histórico com ID:', id); // Log para depuração
+    return ipcRenderer.invoke('mover-para-historico', id);
   }
 });

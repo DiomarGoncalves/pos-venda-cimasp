@@ -37,8 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         endereco: formData.get('endereco'),
         motivo: formData.get('motivo'),
         usuario_id: formData.get('usuario'),
-        data_inicio: new Date().toLocaleString(),
-        anexos: formData.getAll('anexos').map(file => file.name).join(',')
+        data_inicio: new Date().toLocaleString()
       };
       atendimentoId = await window.api.inserirAtendimento(atendimento);
       atendimento.id = atendimentoId;
@@ -55,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.insertCell(4).innerText = atendimento.usuario_id;
       row.insertCell(5).innerText = atendimento.data_inicio;
       const acoesCell = row.insertCell(6);
-      acoesCell.appendChild(criarBotao('Excluir', () => excluirAtendimento(row, atendimento.id)));
+      acoesCell.appendChild(criarBotao('Excluir', () => moverParaHistorico(row, atendimento.id)));
       acoesCell.appendChild(criarBotao('Venda', () => abrirModal(modalVenda, atendimento.id, row, atendimento)));
       acoesCell.appendChild(criarBotao('Garantia', () => abrirModal(modalGarantia, atendimento.id, row, atendimento)));
     }
@@ -68,8 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return button;
     }
 
-    async function excluirAtendimento(row, id) {
-      await window.api.excluirAtendimento(id);
+    async function moverParaHistorico(row, id) {
+      await window.api.moverParaHistorico(id);
       listaAtendimentos.deleteRow(row.rowIndex - 1);
     }
 
@@ -109,15 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
           motivo: atendimentoData.motivo,
           usuario_id: atendimentoData.usuario_id,
           data_inicio: atendimentoData.data_inicio,
-          anexos: atendimentoData.anexos,
           produto: formData.get('produto'),
           preco_custo: formData.get('precoCusto'),
           preco_venda: formData.get('precoVenda'),
           data_venda: formData.get('dataVenda'),
-          vendedor: formData.get('vendedor')
+          vendedor: formData.get('vendedor'),
+          cliente: formData.get('cliente'),
+          nota_fiscal: formData.get('notaFiscal'),
+          pedido_venda: formData.get('pedidoVenda')
         };
+        console.log('Dados da venda:', venda); // Log para depuração
+        if (!venda.produto) {
+          console.error('Produto não fornecido'); // Log para depuração
+          return;
+        }
         await window.api.inserirVenda(venda);
-        await window.api.excluirAtendimento(atendimentoId);
+        await window.api.moverParaHistorico(atendimentoId);
         listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalVenda.classList.add('hidden');
       });
@@ -135,12 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
           motivo: atendimentoData.motivo,
           usuario_id: atendimentoData.usuario_id,
           data_inicio: atendimentoData.data_inicio,
-          anexos: atendimentoData.anexos,
           data_servico: formData.get('dataServico'),
           prestador: formData.get('prestador')
         };
         await window.api.inserirGarantia(garantia);
-        await window.api.excluirAtendimento(atendimentoId);
+        await window.api.moverParaHistorico(atendimentoId);
         listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalGarantia.classList.add('hidden');
       });

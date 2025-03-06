@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atendimento</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-white">
     <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
@@ -18,25 +25,27 @@
     </header>
     <main class="p-6">
         <h2 class="text-2xl mb-4">Registrar Atendimento</h2>
-        <form id="atendimentoForm" class="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <label for="telefone" class="block">Telefone de Contato:</label>
-            <input type="text" id="telefone" name="telefone" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-            <label for="nome" class="block">Nome:</label>
-            <input type="text" id="nome" name="nome" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-            <label for="endereco" class="block">Endereço:</label>
-            <input type="text" id="endereco" name="endereco" class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-            <label for="motivo" class="block">Motivo do Contato:</label>
-            <input type="text" id="motivo" name="motivo" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-            <label for="usuario" class="block">Quem Abriu o Chamado:</label>
-            <select id="usuario" name="usuario" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600"></select>
-
-            <label for="anexos" class="block">Anexar Arquivos:</label>
-            <input type="file" id="anexos" name="anexos" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
-
+        <form id="atendimentoForm" class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4">
+            <div>
+                <label for="telefone" class="block">Telefone de Contato:</label>
+                <input type="text" id="telefone" name="telefone" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="nome" class="block">Nome:</label>
+                <input type="text" id="nome" name="nome" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="endereco" class="block">Endereço:</label>
+                <input type="text" id="endereco" name="endereco" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="motivo" class="block">Motivo do Contato:</label>
+                <input type="text" id="motivo" name="motivo" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="usuario" class="block">Quem Abriu o Chamado:</label>
+                <select id="usuario" name="usuario" required class="w-full p-2 bg-gray-700 rounded border border-gray-600"></select>
+            </div>
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Abrir Chamado</button>
         </form>
 
@@ -64,27 +73,41 @@
 
     <!-- Modal Venda -->
     <div id="modalVenda" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
             <h2 class="text-2xl mb-4">Venda</h2>
-            <form id="vendaForm">
-                <label for="produto" class="block">Produto:</label>
-                <input type="text" id="produto" name="produto" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="precoCusto" class="block">Preço de Custo:</label>
-                <input type="number" id="precoCusto" name="precoCusto" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="precoVenda" class="block">Preço de Venda:</label>
-                <input type="number" id="precoVenda" name="precoVenda" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="dataVenda" class="block">Data da Venda:</label>
-                <input type="date" id="dataVenda" name="dataVenda" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="vendedor" class="block">Nome do Vendedor:</label>
-                <input type="text" id="vendedor" name="vendedor" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="anexosVenda" class="block">Anexar Arquivos:</label>
-                <input type="file" id="anexosVenda" name="anexosVenda" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
-
+            <form id="vendaForm" class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="produto" class="block">Produto:</label>
+                    <input type="text" id="produto" name="produto" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="precoCusto" class="block">Preço de Custo:</label>
+                    <input type="number" id="precoCusto" name="precoCusto" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="precoVenda" class="block">Preço de Venda:</label>
+                    <input type="number" id="precoVenda" name="precoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="dataVenda" class="block">Data da Venda:</label>
+                    <input type="date" id="dataVenda" name="dataVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="vendedor" class="block">Nome do Vendedor:</label>
+                    <input type="text" id="vendedor" name="vendedor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="cliente" class="block">Nome do Cliente:</label>
+                    <input type="text" id="cliente" name="cliente" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="notaFiscal" class="block">Nota Fiscal:</label>
+                    <input type="text" id="notaFiscal" name="notaFiscal" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="pedidoVenda" class="block">Pedido de Venda:</label>
+                    <input type="text" id="pedidoVenda" name="pedidoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
                 <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Venda</button>
                 <button type="button" id="closeVenda" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
             </form>
@@ -93,18 +116,17 @@
 
     <!-- Modal Garantia -->
     <div id="modalGarantia" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
             <h2 class="text-2xl mb-4">Garantia</h2>
-            <form id="garantiaForm">
-                <label for="dataServico" class="block">Data do Serviço:</label>
-                <input type="date" id="dataServico" name="dataServico" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="prestador" class="block">Prestador:</label>
-                <input type="text" id="prestador" name="prestador" required class="w-full p-2 mb-2 bg-gray-700 rounded border border-gray-600">
-
-                <label for="anexosGarantia" class="block">Anexar Arquivos:</label>
-                <input type="file" id="anexosGarantia" name="anexosGarantia" multiple class="w-full p-2 mb-4 bg-gray-700 rounded border border-gray-600">
-
+            <form id="garantiaForm" class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="dataServico" class="block">Data do Serviço:</label>
+                    <input type="date" id="dataServico" name="dataServico" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="prestador" class="block">Prestador:</label>
+                    <input type="text" id="prestador" name="prestador" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
                 <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Garantia</button>
                 <button type="button" id="closeGarantia" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
             </form>
