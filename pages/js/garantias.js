@@ -16,70 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function adicionarGarantia(garantia) {
     const row = listaGarantias.insertRow();
-    row.insertCell(0).innerText = garantia.produto;
-    row.insertCell(1).innerText = garantia.preco_custo;
-    row.insertCell(2).innerText = garantia.preco_venda;
-    row.insertCell(3).innerText = garantia.data_venda;
-    row.insertCell(4).innerText = garantia.vendedor;
-    row.insertCell(5).innerHTML = garantia.anexos.split(',').map(anexo => `<a href="${anexo}" target="_blank" class="text-blue-400 hover:text-blue-300">${anexo}</a>`).join('<br>');
-    const acoesCell = row.insertCell(6);
-    acoesCell.appendChild(criarBotao('Inserir Anexos', () => inserirAnexos(garantia.id)));
-    acoesCell.appendChild(criarBotao('Visualizar Anexos', () => visualizarAnexos(garantia.anexos)));
-  }
-
-  function criarBotao(texto, onClick) {
-    const button = document.createElement('button');
-    button.innerText = texto;
-    button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded m-1';
-    button.addEventListener('click', onClick);
-    return button;
-  }
-
-  async function inserirAnexos(id) {
-    const { value: files } = await Swal.fire({
-      title: 'Selecione os arquivos',
-      input: 'file',
-      inputAttributes: {
-        'multiple': 'multiple'
-      },
-      showCancelButton: true,
-      confirmButtonText: 'Inserir',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (files) {
-      const formData = [];
-      for (let i = 0; i < files.length; i++) {
-        formData.push({
-          name: files[i].name,
-          buffer: await files[i].arrayBuffer()
-        });
-      }
-      await window.api.inserirAnexos(id, formData);
-      Swal.fire('Anexos inseridos com sucesso!', '', 'success');
-      carregarGarantias();
-    }
-  }
-
-  function visualizarAnexos(anexos) {
-    const anexosArray = anexos.split(',');
-    let anexosHtml = '';
-    anexosArray.forEach(anexo => {
-      anexosHtml += `<a href="${anexo}" target="_blank" class="block text-blue-400 hover:text-blue-300">${anexo}</a>`;
-    });
-    Swal.fire({
-      title: 'Anexos',
-      html: anexosHtml,
-      width: '600px',
-      padding: '3em',
-      background: '#fff',
-      backdrop: `
-        rgba(0,0,123,0.4)
-        url("https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png")
-        left top
-        no-repeat
-      `
-    });
+    row.insertCell(0).innerText = garantia.data_servico;
+    row.insertCell(1).innerText = garantia.prestador;
+    row.insertCell(2).innerText = garantia.telefone;
+    row.insertCell(3).innerText = garantia.endereco;
+    row.insertCell(4).innerText = garantia.motivo;
+    row.insertCell(5).innerText = garantia.nota;
+    row.insertCell(6).innerText = garantia.peca_substituida;
+    row.insertCell(7).innerText = garantia.valor;
   }
 
   function aplicarFiltrosGarantias() {

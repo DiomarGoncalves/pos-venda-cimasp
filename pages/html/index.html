@@ -5,26 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Ponto de Venda</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="bg-gray-900 text-white">
     <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
-        <img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40">
+        <a href="loginConfig.html"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
         <h1 class="text-xl"> Pos-venda</h1>
         <nav>
             <ul class="flex space-x-4">
                 <li><a href="atendimento.html" class="text-blue-400 hover:text-blue-300">Atendimento</a></li>
                 <li><a href="venda.html" class="text-blue-400 hover:text-blue-300">Vendas</a></li>
                 <li><a href="garantia.html" class="text-blue-400 hover:text-blue-300">Garantias</a></li>
-                <li><a href="comissao.html" class="text-blue-400 hover:text-blue-300">Comissões</a></li>
-                <li><a href="configuracao.html" class="text-blue-400 hover:text-blue-300">Configuração</a></li>
+                <li><a href="loginComissao.html" class="text-blue-400 hover:text-blue-300">Comissões</a></li>
+                <li><a href="historicoAtendimentos.html" class="text-blue-400 hover:text-blue-300">Histórico de Atendimentos</a></li>
             </ul>
         </nav>
     </header>
     <main class="flex flex-col items-center justify-center h-screen">
-        <h2 class="text-2xl">Selecione uma opção acima para começar</h2>
+        <h2 class="text-2xl mb-4">Selecione uma opção acima para começar</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full px-4">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+                <h3 class="text-xl mb-2">Total de Vendas</h3>
+                <p id="totalVendas" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+                <h3 class="text-xl mb-2">Total de Atendimentos</h3>
+                <p id="totalAtendimentos" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+                <h3 class="text-xl mb-2">Total de Garantias</h3>
+                <p id="totalGarantias" class="text-3xl font-bold">0</p>
+            </div>
+        </div>
     </main>
     <footer class="bg-gray-800 p-4 text-center">
         <p>&copy; 2025 Sistema de Ponto de Venda</p>
     </footer>
+    <script src="../js/index.js"></script>
 </body>
 </html>

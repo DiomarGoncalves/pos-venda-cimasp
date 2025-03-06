@@ -74,43 +74,47 @@
     <!-- Modal Venda -->
     <div id="modalVenda" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
-            <h2 class="text-2xl mb-4">Venda</h2>
-            <form id="vendaForm" class="grid grid-cols-1 gap-4">
-                <div>
-                    <label for="produto" class="block">Produto:</label>
-                    <input type="text" id="produto" name="produto" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="precoCusto" class="block">Preço de Custo:</label>
-                    <input type="number" id="precoCusto" name="precoCusto" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="precoVenda" class="block">Preço de Venda:</label>
-                    <input type="number" id="precoVenda" name="precoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="dataVenda" class="block">Data da Venda:</label>
-                    <input type="date" id="dataVenda" name="dataVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="vendedor" class="block">Nome do Vendedor:</label>
-                    <input type="text" id="vendedor" name="vendedor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="cliente" class="block">Nome do Cliente:</label>
-                    <input type="text" id="cliente" name="cliente" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="notaFiscal" class="block">Nota Fiscal:</label>
-                    <input type="text" id="notaFiscal" name="notaFiscal" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <div>
-                    <label for="pedidoVenda" class="block">Pedido de Venda:</label>
-                    <input type="text" id="pedidoVenda" name="pedidoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
-                </div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Venda</button>
-                <button type="button" id="closeVenda" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
-            </form>
+        <h2 class="text-2xl mb-4">Venda</h2>
+        <form id="vendaForm" class="grid grid-cols-1 gap-4">
+            <div>
+            <label for="produto" class="block">Produto:</label>
+            <input type="text" id="produto" name="produto"  class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="precoCusto" class="block">Preço de Custo:</label>
+            <input type="number" id="precoCusto" name="precoCusto" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="precoVenda" class="block">Preço de Venda:</label>
+            <input type="number" id="precoVenda" name="precoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="dataVenda" class="block">Data da Venda:</label>
+            <input type="date" id="dataVenda" name="dataVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="vendedor" class="block">Nome do Vendedor:</label>
+            <input type="text" id="vendedor" name="vendedor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="cliente" class="block">Nome do Cliente:</label>
+            <input type="text" id="cliente" name="cliente" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="notaFiscal" class="block">Nota Fiscal:</label>
+            <input type="text" id="notaFiscal" name="notaFiscal" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+            <label for="pedidoVenda" class="block">Pedido de Venda:</label>
+            <input type="text" id="pedidoVenda" name="pedidoVenda" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="prazoFabricacao" class="block">Prazo de Fabricação:</label>
+                <input type="date" id="prazoFabricacao" name="prazoFabricacao" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Venda</button>
+            <button type="button" id="closeVenda" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
+        </form>
         </div>
     </div>
 
@@ -126,6 +130,18 @@
                 <div>
                     <label for="prestador" class="block">Prestador:</label>
                     <input type="text" id="prestador" name="prestador" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="nota" class="block">Nota:</label>
+                    <input type="text" id="nota" name="nota" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="pecaSubstituida" class="block">Peça Substituída:</label>
+                    <input type="text" id="pecaSubstituida" name="pecaSubstituida" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="valor" class="block">Valor:</label>
+                    <input type="number" id="valor" name="valor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
                 </div>
                 <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Garantia</button>
                 <button type="button" id="closeGarantia" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>

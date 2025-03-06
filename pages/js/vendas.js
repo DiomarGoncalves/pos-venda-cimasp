@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     row.insertCell(2).innerText = venda.preco_venda;
     row.insertCell(3).innerText = venda.data_venda;
     row.insertCell(4).innerText = venda.vendedor;
-    row.insertCell(5).innerHTML = venda.anexos.split(',').map(anexo => `<a href="${anexo}" target="_blank" class="text-blue-400 hover:text-blue-300">${anexo}</a>`).join('<br>');
-    const acoesCell = row.insertCell(6);
-    acoesCell.appendChild(criarBotao('Inserir Anexos', () => inserirAnexos(venda.id)));
-    acoesCell.appendChild(criarBotao('Visualizar Anexos', () => visualizarAnexos(venda.anexos)));
+    row.insertCell(5).innerText = venda.cliente;
+    row.insertCell(6).innerText = venda.nota_fiscal;
+    row.insertCell(7).innerText = venda.pedido_venda;
+    row.insertCell(8).innerText = venda.prazo_fabricacao;
   }
 
   function criarBotao(texto, onClick) {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function exportarParaExcel() {
     const rows = listaVendas.getElementsByTagName('tr');
     const wb = XLSX.utils.book_new();
-    const ws_data = [['Produto', 'Preço de Custo', 'Preço de Venda', 'Data da Venda', 'Vendedor', 'Anexos']];
+    const ws_data = [['Produto', 'Preço de Custo', 'Preço de Venda', 'Data da Venda', 'Vendedor', 'Cliente', 'Nota Fiscal', 'Pedido de Venda', 'Prazo de Fabricação']];
     for (let i = 0; i < rows.length; i++) {
       const cells = rows[i].getElementsByTagName('td');
       let row = [];

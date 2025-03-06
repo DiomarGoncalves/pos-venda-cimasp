@@ -1,48 +1,50 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const configForm = document.getElementById('configForm');
-  const configList = document.getElementById('configList');
+  const userForm = document.getElementById('userForm');
+  const userList = document.getElementById('userList');
+  const usernameSelect = document.getElementById('username');
 
-  async function carregarConfiguracoes() {
-    const configuracoes = await window.api.listarConfiguracoes();
-    configuracoes.forEach(adicionarConfiguracao);
+  async function carregarUsuarios() {
+    const usuarios = await window.api.listarUsuarios();
+    userList.innerHTML = ''; // Limpar a lista antes de carregar
+    usernameSelect.innerHTML = '<option value="">Selecione um usuário</option>'; // Limpar a lista suspensa antes de carregar
+    usuarios.forEach(adicionarUsuario);
   }
 
-  function adicionarConfiguracao(configuracao) {
-    const row = configList.insertRow();
-    row.insertCell(0).innerText = configuracao.usuario;
-    row.insertCell(1).innerText = configuracao.acesso;
-    const acoesCell = row.insertCell(2);
-    acoesCell.appendChild(criarBotao('Editar', () => editarConfiguracao(configuracao.id)));
-    acoesCell.appendChild(criarBotao('Excluir', () => excluirConfiguracao(configuracao.id)));
+  function adicionarUsuario(usuario) {
+    const row = userList.insertRow();
+    row.insertCell(0).innerText = usuario.nome;
+    row.insertCell(1).innerText = usuario.permissao;
+    const option = document.createElement('option');
+    option.value = usuario.id;
+    option.text = usuario.nome;
+    usernameSelect.appendChild(option);
   }
 
-  function criarBotao(texto, onClick) {
-    const button = document.createElement('button');
-    button.innerText = texto;
-    button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded m-1';
-    button.addEventListener('click', onClick);
-    return button;
+  if (usernameSelect) {
+    usernameSelect.addEventListener('change', async () => {
+      const userId = usernameSelect.value;
+      if (userId) {
+        const usuarios = await window.api.listarUsuarios();
+        const usuario = usuarios.find(u => u.id == userId);
+        if (usuario) {
+          const [userAccess, commissionAccess] = usuario.permissao.split(',');
+          document.getElementById('userAccess').value = userAccess;
+          document.getElementById('commissionAccess').value = commissionAccess;
+        }
+      }
+    });
   }
 
-  configForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(configForm);
-    const configuracao = {
-      usuario: formData.get('userAccess'),
-      acesso: formData.get('commissionAccess')
-    };
-    await window.api.salvarConfiguracao(configuracao);
-    carregarConfiguracoes();
-  });
-
-  async function editarConfiguracao(id) {
-    // Implementar lógica de edição
+  if (userForm) {
+    userForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(userForm);
+      const userId = formData.get('username');
+      const permissao = `${formData.get('userAccess')},${formData.get('commissionAccess')}`;
+      await window.api.editarPermissaoUsuario(userId, permissao);
+      carregarUsuarios();
+    });
   }
 
-  async function excluirConfiguracao(id) {
-    await window.api.excluirConfiguracao(id);
-    carregarConfiguracoes();
-  }
-
-  await carregarConfiguracoes();
+  await carregarUsuarios();
 });

@@ -115,8 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
           vendedor: formData.get('vendedor'),
           cliente: formData.get('cliente'),
           nota_fiscal: formData.get('notaFiscal'),
-          pedido_venda: formData.get('pedidoVenda')
+          pedido_venda: formData.get('pedidoVenda'),
+          prazo_fabricacao: formData.get('prazoFabricacao')
         };
+
         console.log('Dados da venda:', venda); // Log para depuração
         if (!venda.produto) {
           console.error('Produto não fornecido'); // Log para depuração
@@ -124,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         await window.api.inserirVenda(venda);
         await window.api.moverParaHistorico(atendimentoId);
-        listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalVenda.classList.add('hidden');
+        location.reload(); // Atualiza a página após a inserção da venda
       });
     }
 
@@ -142,12 +144,16 @@ document.addEventListener('DOMContentLoaded', () => {
           usuario_id: atendimentoData.usuario_id,
           data_inicio: atendimentoData.data_inicio,
           data_servico: formData.get('dataServico'),
-          prestador: formData.get('prestador')
+          prestador: formData.get('prestador'),
+          nota: formData.get('nota'),
+          peca_substituida: formData.get('pecaSubstituida'),
+          valor: formData.get('valor')
         };
+        console.log('Dados da garantia:', garantia); // Log para depuração
         await window.api.inserirGarantia(garantia);
         await window.api.moverParaHistorico(atendimentoId);
-        listaAtendimentos.deleteRow(atendimentoRow.rowIndex);
         modalGarantia.classList.add('hidden');
+        location.reload(); // Atualiza a página após a inserção da garantia
       });
     }
 

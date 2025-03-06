@@ -34,9 +34,9 @@ contextBridge.exposeInMainWorld('api', {
     console.log('Listando atendimentos'); // Log para depuração
     return ipcRenderer.invoke('listar-atendimentos');
   },
-  inserirVenda: (venda) => {
-    console.log('Inserindo venda', venda); // Log para depuração
-    return ipcRenderer.invoke('inserir-venda', venda);
+  inserirVenda: (venda, prazo_fabricacao) => {
+    console.log('Inserindo venda', venda, 'Prazo de fabricação:', prazo_fabricacao); // Log para depuração
+    return ipcRenderer.invoke('inserir-venda', venda, prazo_fabricacao);
   },
   listarVendas: () => {
     console.log('Listando vendas'); // Log para depuração
@@ -93,5 +93,17 @@ contextBridge.exposeInMainWorld('api', {
   moverParaHistorico: (id) => {
     console.log('Movendo atendimento para histórico com ID:', id); // Log para depuração
     return ipcRenderer.invoke('mover-para-historico', id);
+  },
+  verificarPermissao: (username, permissao) => {
+    console.log(`Verificando permissão ${permissao} para o usuário:`, username); // Log para depuração
+    return ipcRenderer.invoke('verificar-permissao', username, permissao);
+  },
+  editarPermissaoUsuario: (id, permissao) => {
+    console.log(`Editando permissão do usuário com ID: ${id}`); // Log para depuração
+    return ipcRenderer.invoke('editar-permissao-usuario', id, permissao);
+  },
+  listarHistoricoAtendimentos: () => {
+    console.log('Listando histórico de atendimentos'); // Log para depuração
+    return ipcRenderer.invoke('listar-historico-atendimentos');
   }
 });

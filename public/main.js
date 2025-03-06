@@ -19,7 +19,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '../pages/html/login.html'));
 
   // Open the DevTools (optional)
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
@@ -72,6 +72,13 @@ ipcMain.handle('cadastrar-usuario', async (event, username, password) => {
 
 ipcMain.handle('inserir-venda', async (event, venda) => {
   console.log('Inserindo venda', venda); // Log para depuração
+
+  // Verificação dos campos obrigatórios
+  if (!venda.produto || !venda.preco_custo || !venda.preco_venda || !venda.data_venda || !venda.vendedor || !venda.cliente || !venda.nota_fiscal || !venda.pedido_venda) {
+    console.error('Erro: Campos obrigatórios não preenchidos'); // Log para depuração
+    throw new Error('Campos obrigatórios não preenchidos');
+  }
+
   try {
     const vendaId = await db.inserirVenda(
       venda.atendimento_id,
@@ -81,7 +88,6 @@ ipcMain.handle('inserir-venda', async (event, venda) => {
       venda.motivo,
       venda.usuario_id,
       venda.data_inicio,
-      venda.anexos,
       venda.produto,
       venda.preco_custo,
       venda.preco_venda,
@@ -89,17 +95,24 @@ ipcMain.handle('inserir-venda', async (event, venda) => {
       venda.vendedor,
       venda.cliente,
       venda.nota_fiscal,
-      venda.pedido_venda
+      venda.pedido_venda,
+      venda.prazo_fabricacao
     );
+    console.log('Venda inserida com ID:', vendaId); // Log para depuração
     return vendaId;
   } catch (error) {
-    console.error('Erro ao inserir venda:', error.message); // Log para depuração
+    console.error('Erro ao inserir venda main:', error.message); // Log para depuração
     throw error;
   }
 });
 
 ipcMain.handle('inserir-garantia', async (event, garantia) => {
   console.log('Inserindo garantia', garantia); // Log para depuração
+  // Verificação dos campos obrigatórios
+  if (!garantia.data_servico) {
+    console.error('Erro: Campo data_servico não preenchido'); // Log para depuração
+    throw new Error('Campo data_servico não preenchido');
+  }
   return await db.inserirGarantia(
     garantia.atendimento_id,
     garantia.telefone,
@@ -108,9 +121,11 @@ ipcMain.handle('inserir-garantia', async (event, garantia) => {
     garantia.motivo,
     garantia.usuario_id,
     garantia.data_inicio,
-    garantia.anexos,
     garantia.data_servico,
-    garantia.prestador
+    garantia.prestador,
+    garantia.nota,
+    garantia.peca_substituida,
+    garantia.valor
   );
 });
 
@@ -175,4 +190,20 @@ ipcMain.handle('excluir-configuracao', async (event, id) => {
 ipcMain.handle('mover-para-historico', async (event, id) => {
   console.log('Movendo atendimento para histórico com ID:', id); // Log para depuração
   return await db.excluirAtendimento(id);
+});
+
+ipcMain.handle('verificar-permissao', async (event, username, permissao) => {
+  console.log(`Verificando permissão ${permissao} para o usuário:`, username); // Log para depuração
+  const user = await db.obterPermissaoUsuario(username, permissao);
+  return user ? true : false;
+});
+
+ipcMain.handle('editar-permissao-usuario', async (event, id, permissao) => {
+  console.log(`Editando permissão do usuário com ID: ${id}`); // Log para depuração
+  return await db.editarPermissaoUsuario(id, permissao);
+});
+
+ipcMain.handle('listar-historico-atendimentos', async () => {
+  console.log('Listando histórico de atendimentos'); // Log para depuração
+  return await db.listarHistoricoAtendimentos();
 });
