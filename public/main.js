@@ -144,17 +144,28 @@ ipcMain.handle('excluir-venda', async (event, id) => {
   return await db.excluirVenda(id);
 });
 
-ipcMain.handle('inserir-anexos', async (event, id, files) => {
-  console.log('Inserindo anexos para venda com ID:', id); // Log para depuração
+ipcMain.handle('inserir-anexos', async (event, clienteNome, tipo, files) => {
+  console.log('Inserindo anexos para cliente:', clienteNome, 'Tipo:', tipo); // Log para depuração
+  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
+  const clienteDir = path.join(baseDir, clienteNome);
+  const tipoDir = path.join(clienteDir, tipo);
+
+  if (!fs.existsSync(clienteDir)) {
+    fs.mkdirSync(clienteDir);
+  }
+  if (!fs.existsSync(tipoDir)) {
+    fs.mkdirSync(tipoDir);
+  }
+
   const anexos = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const fileName = `${uuidv4()}-${file.name}`;
-    const filePath = path.join(__dirname, 'uploads', fileName);
+    const fileName = file.name;
+    const filePath = path.join(tipoDir, fileName);
     fs.writeFileSync(filePath, Buffer.from(file.buffer));
     anexos.push(filePath);
   }
-  return await db.inserirAnexos(id, anexos.join(','));
+  return anexos.join(',');
 });
 
 ipcMain.handle('listar-garantias', async () => {
@@ -206,4 +217,41 @@ ipcMain.handle('editar-permissao-usuario', async (event, id, permissao) => {
 ipcMain.handle('listar-historico-atendimentos', async () => {
   console.log('Listando histórico de atendimentos'); // Log para depuração
   return await db.listarHistoricoAtendimentos();
+});
+
+ipcMain.handle('editar-atendimento', async (event, id, atendimento) => {
+  console.log('Editando atendimento com ID:', id, atendimento); // Log para depuração
+  return await db.editarAtendimento(id, atendimento.telefone, atendimento.nome, atendimento.endereco, atendimento.motivo);
+});
+
+ipcMain.handle('listar-anexos', async (event, clienteNome) => {
+  console.log('Listando anexos para cliente:', clienteNome); // Log para depuração
+  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
+  const clienteDir = path.join(baseDir, clienteNome);
+  if (!fs.existsSync(clienteDir)) {
+    return '';
+  }
+
+  const anexos = [];
+  const tipos = fs.readdirSync(clienteDir);
+  tipos.forEach(tipo => {
+    const tipoDir = path.join(clienteDir, tipo);
+    const files = fs.readdirSync(tipoDir);
+    files.forEach(file => {
+      anexos.push(path.join(tipoDir, file));
+    });
+  });
+
+  return anexos.join(',');
+});
+
+ipcMain.handle('listar-pastas-clientes', async () => {
+  console.log('Listando pastas de clientes'); // Log para depuração
+  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
+  if (!fs.existsSync(baseDir)) {
+    return [];
+  }
+
+  const pastas = fs.readdirSync(baseDir);
+  return pastas;
 });

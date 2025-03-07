@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anexos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300"><img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="w-40"></a>
+        <h1 class="text-xl">Anexos</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="index.html" class="text-blue-400 hover:text-blue-300">Inicio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="p-6">
+        <h2 class="text-2xl mb-4">Inserir Anexos</h2>
+        <form id="anexosForm" class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4">
+            <div>
+                <label for="clienteNome" class="block">Nome do Cliente:</label>
+                <input type="text" id="clienteNome" name="clienteNome" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="tipo" class="block">Tipo:</label>
+                <select id="tipo" name="tipo" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <option value="venda">Venda</option>
+                    <option value="garantia">Garantia</option>
+                </select>
+            </div>
+            <div>
+                <label for="anexos" class="block">Selecione os Arquivos:</label>
+                <input type="file" id="anexos" name="anexos" multiple required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Inserir Anexos</button>
+        </form>
+
+        <h2 class="text-2xl mt-6 mb-4">Visualizar Anexos</h2>
+        <form id="visualizarForm" class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4">
+            <div>
+                <label for="clienteNomeVisualizar" class="block">Nome do Cliente:</label>
+                <input type="text" id="clienteNomeVisualizar" name="clienteNomeVisualizar" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Visualizar Anexos</button>
+        </form>
+        <div id="anexosLista" class="mt-4">
+            <!-- Lista de anexos será carregada aqui -->
+        </div>
+
+        <h2 class="text-2xl mt-6 mb-4">Pastas de Clientes</h2>
+        <div id="pastasClientes" class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4">
+            <!-- Lista de pastas de clientes será carregada aqui -->
+        </div>
+    </main>
+    <footer class="bg-gray-800 p-4 text-center">
+        <p>&copy; 2025 Sistema de Ponto de Venda</p>
+    </footer>
+    <script src="../js/anexos.js"></script>
+</body>
+</html>

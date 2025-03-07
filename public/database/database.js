@@ -267,6 +267,22 @@ function inserirComissao(venda_id, porcentagem) {
   });
 }
 
+function inserirAnexos(id, anexos) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE vendas SET anexos = ? WHERE id = ?`,
+      [anexos, id],
+      function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(this.changes);
+        }
+      }
+    );
+  });
+}
+
 // Funções para listar dados
 function listarUsuarios() {
   return new Promise((resolve, reject) => {
@@ -360,8 +376,8 @@ function listarHistoricoAtendimentos() {
 function editarAtendimento(id, telefone, nome, endereco, motivo, usuario_id) {
   return new Promise((resolve, reject) => {
     db.run(
-      `UPDATE atendimentos SET telefone = ?, nome = ?, endereco = ?, motivo = ?, usuario_id = ? WHERE id = ?`,
-      [telefone, nome, endereco, motivo, usuario_id, id],
+      `UPDATE atendimentos SET telefone = ?, nome = ?, endereco = ?, motivo = ?, id = ?`,
+      [telefone, nome, endereco, motivo, id],
       function (err) {
         if (err) {
           reject(err);
@@ -509,6 +525,22 @@ function salvarConfiguracao(usuario, acesso) {
   });
 }
 
+function obterVenda(id) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `SELECT * FROM vendas WHERE id = ?`,
+      [id],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      }
+    );
+  });
+}
+
 module.exports = {
   inserirUsuario,
   inserirAtendimento,
@@ -530,4 +562,6 @@ module.exports = {
   obterPermissaoUsuario,
   salvarConfiguracao,
   editarPermissaoUsuario,
+  inserirAnexos,
+  obterVenda,
 };

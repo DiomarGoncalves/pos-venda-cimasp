@@ -149,6 +149,33 @@
         </div>
     </div>
 
+    <!-- Modal Editar -->
+    <div id="modalEditar" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
+            <h2 class="text-2xl mb-4">Editar Atendimento</h2>
+            <form id="editarForm" class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="telefone" class="block">Telefone de Contato:</label>
+                    <input type="text" id="telefone" name="telefone" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="nome" class="block">Nome:</label>
+                    <input type="text" id="nome" name="nome" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="endereco" class="block">Endereço:</label>
+                    <input type="text" id="endereco" name="endereco" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="motivo" class="block">Motivo do Contato:</label>
+                    <input type="text" id="motivo" name="motivo" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Alterações</button>
+                <button type="button" id="closeEditar" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>
+            </form>
+        </div>
+    </div>
+
     <script src="../js/atendimento.js"></script>
 </body>
 </html>

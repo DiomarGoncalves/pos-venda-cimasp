@@ -54,9 +54,17 @@ contextBridge.exposeInMainWorld('api', {
     console.log('Listando garantias'); // Log para depuração
     return ipcRenderer.invoke('listar-garantias');
   },
-  inserirAnexos: (id, formData) => {
-    console.log('Inserindo anexos para venda com ID:', id); // Log para depuração
-    return ipcRenderer.invoke('inserir-anexos', id, formData);
+  inserirAnexos: (clienteNome, tipo, formData) => {
+    console.log('Inserindo anexos para cliente:', clienteNome, 'Tipo:', tipo); // Log para depuração
+    return ipcRenderer.invoke('inserir-anexos', clienteNome, tipo, formData);
+  },
+  listarAnexos: (clienteNome) => {
+    console.log('Listando anexos para cliente:', clienteNome); // Log para depuração
+    return ipcRenderer.invoke('listar-anexos', clienteNome);
+  },
+  listarPastasClientes: () => {
+    console.log('Listando pastas de clientes'); // Log para depuração
+    return ipcRenderer.invoke('listar-pastas-clientes');
   },
   login: (username, password) => {
     console.log('Login com username:', username); // Log para depuração
@@ -105,5 +113,9 @@ contextBridge.exposeInMainWorld('api', {
   listarHistoricoAtendimentos: () => {
     console.log('Listando histórico de atendimentos'); // Log para depuração
     return ipcRenderer.invoke('listar-historico-atendimentos');
+  },
+  editarAtendimento: (id, atendimento) => {
+    console.log('Editando atendimento com ID:', id, atendimento); // Log para depuração
+    return ipcRenderer.invoke('editar-atendimento', id, atendimento);
   }
 });
