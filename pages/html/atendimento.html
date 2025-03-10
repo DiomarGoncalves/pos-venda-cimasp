@@ -46,6 +46,22 @@
                 <label for="usuario" class="block">Quem Abriu o Chamado:</label>
                 <select id="usuario" name="usuario" required class="w-full p-2 bg-gray-700 rounded border border-gray-600"></select>
             </div>
+            <div>
+                <label for="equipamento" class="block">Equipamento:</label>
+                <input type="text" id="equipamento" name="equipamento" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="chassi" class="block">Chassi / Placa:</label>
+                <input type="text" id="chassi" name="chassi" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="cliente" class="block">Cliente:</label>
+                <input type="text" id="cliente" name="cliente" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="dataFabricacao" class="block">Data de Fabricação:</label>
+                <input type="date" id="dataFabricacao" name="dataFabricacao" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Abrir Chamado</button>
         </form>
 
@@ -124,24 +140,101 @@
             <h2 class="text-2xl mb-4">Garantia</h2>
             <form id="garantiaForm" class="grid grid-cols-1 gap-4">
                 <div>
-                    <label for="dataServico" class="block">Data do Serviço:</label>
-                    <input type="date" id="dataServico" name="dataServico" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <label for="equipamento" class="block">Equipamento:</label>
+                    <input type="text" id="equipamento" name="equipamento" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
                 </div>
                 <div>
-                    <label for="prestador" class="block">Prestador:</label>
-                    <input type="text" id="prestador" name="prestador" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <label for="chassi" class="block">Chassi / Placa:</label>
+                    <input type="text" id="chassi" name="chassi" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
                 </div>
                 <div>
-                    <label for="nota" class="block">Nota:</label>
-                    <input type="text" id="nota" name="nota" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <label for="cliente" class="block">Cliente:</label>
+                    <input type="text" id="cliente" name="cliente" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
                 </div>
                 <div>
-                    <label for="pecaSubstituida" class="block">Peça Substituída:</label>
-                    <input type="text" id="pecaSubstituida" name="pecaSubstituida" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <label for="dataFabricacao" class="block">Data de Fabricação:</label>
+                    <input type="date" id="dataFabricacao" name="dataFabricacao" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
                 </div>
                 <div>
-                    <label for="valor" class="block">Valor:</label>
-                    <input type="number" id="valor" name="valor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <label for="dataAberturaChamado" class="block">Data de Abertura do Chamado:</label>
+                    <input type="date" id="dataAberturaChamado" name="dataAberturaChamado" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="tecnico" class="block">Técnico:</label>
+                    <input type="text" id="tecnico" name="tecnico" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="tipoAssistencia" class="block">Tipo de Assistência:</label>
+                    <select id="tipoAssistencia" name="tipoAssistencia" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                        <option value="CORTESIA">CORTESIA</option>
+                        <option value="ASSISTENCIA">ASSISTENCIA</option>
+                        <option value="NÃO PROCEDE">NÃO PROCEDE</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="localAssistencia" class="block">Local da Assistência:</label>
+                    <input type="text" id="localAssistencia" name="localAssistencia" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="contato" class="block">Contato:</label>
+                    <input type="text" id="contato" name="contato" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="telefone" class="block">Telefone:</label>
+                    <input type="text" id="telefone" name="telefone" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="problemaApresentado" class="block">Problema Apresentado:</label>
+                    <select id="problemaApresentado" name="problemaApresentado" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                        <option value="ESTRUTURAL">ESTRUTURAL</option>
+                        <option value="ELETRICA">ELETRICA</option>
+                        <option value="HIDRAULICA">HIDRAULICA</option>
+                        <option value="ELETRICA/HIDRAULICA">ELETRICA/HIDRAULICA</option>
+                        <option value="ELETRICA/ESTRUTURAL">ELETRICA/ESTRUTURAL</option>
+                        <option value="HIDRAULICA/ESTRUTURAL">HIDRAULICA/ESTRUTURAL</option>
+                        <option value="ELETRICA/HIDRAULICA/ESTRUTURAL">ELETRICA/HIDRAULICA/ESTRUTURAL</option>
+                        <option value="IMPLEMENTAÇÃO/ADEQUAÇÃO/ENTRE EIXO">IMPLEMENTAÇÃO/ADEQUAÇÃO/ENTRE EIXO</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="fornecedor" class="block">Fornecedor:</label>
+                    <input type="text" id="fornecedor" name="fornecedor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="peca" class="block">Peça:</label>
+                    <input type="text" id="peca" name="peca" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="observacoes" class="block">Observações:</label>
+                    <textarea id="observacoes" name="observacoes" required class="w-full p-2 bg-gray-700 rounded border border-gray-600"></textarea>
+                </div>
+                <div>
+                    <label for="dataAtendimento" class="block">Data do Atendimento:</label>
+                    <input type="date" id="dataAtendimento" name="dataAtendimento" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="tecnicoResponsavel" class="block">Técnico Responsável:</label>
+                    <input type="text" id="tecnicoResponsavel" name="tecnicoResponsavel" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="custoPecaMaoObra" class="block">Custo Peça/Mão de Obra:</label>
+                    <input type="number" id="custoPecaMaoObra" name="custoPecaMaoObra" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="custoViagemFrete" class="block">Custo Viagem/Frete:</label>
+                    <input type="number" id="custoViagemFrete" name="custoViagemFrete" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="devolucaoPeca" class="block">Devolução Peça:</label>
+                    <input type="text" id="devolucaoPeca" name="devolucaoPeca" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="garantiaFornecedor" class="block">Garantia Fornecedor:</label>
+                    <input type="text" id="garantiaFornecedor" name="garantiaFornecedor" required class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                </div>
+                <div>
+                    <label for="solucaoTecnica" class="block">Solução Técnica:</label>
+                    <textarea id="solucaoTecnica" name="solucaoTecnica" required class="w-full p-2 bg-gray-700 rounded border border-gray-600"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar Garantia</button>
                 <button type="button" id="closeGarantia" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mt-2">Fechar</button>

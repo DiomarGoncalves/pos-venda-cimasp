@@ -216,10 +216,10 @@ function inserirGarantia(
   motivo,
   usuario_id,
   data_inicio,
-  data_servico,
+  dataAtendimento,
   prestador,
   nota,
-  peca_substituida,
+  peca,
   valor
 ) {
   return new Promise((resolve, reject) => {
@@ -233,10 +233,10 @@ function inserirGarantia(
         motivo,
         usuario_id,
         data_inicio,
-        data_servico,
+        dataAtendimento,
         prestador,
         nota,
-        peca_substituida,
+        peca,
         valor,
       ],
       function (err) {

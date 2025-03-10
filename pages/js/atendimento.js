@@ -91,7 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
         endereco: formData.get('endereco'),
         motivo: formData.get('motivo'),
         usuario_id: formData.get('usuario'),
-        data_inicio: new Date().toLocaleString()
+        data_inicio: new Date().toLocaleString(),
+        equipamento: formData.get('equipamento'),
+        chassi: formData.get('chassi'),
+        cliente: formData.get('cliente'),
+        dataFabricacao: formData.get('dataFabricacao')
       };
       atendimentoId = await window.api.inserirAtendimento(atendimento);
       atendimento.id = atendimentoId;
@@ -227,11 +231,27 @@ document.addEventListener('DOMContentLoaded', () => {
           motivo: atendimentoData.motivo,
           usuario_id: atendimentoData.usuario_id,
           data_inicio: atendimentoData.data_inicio,
-          data_servico: formData.get('dataServico'),
-          prestador: formData.get('prestador'),
-          nota: formData.get('nota'),
-          peca_substituida: formData.get('pecaSubstituida'),
-          valor: formData.get('valor')
+          equipamento: formData.get('equipamento'),
+          chassi: formData.get('chassi'),
+          cliente: formData.get('cliente'),
+          dataFabricacao: formData.get('dataFabricacao'),
+          dataAberturaChamado: formData.get('dataAberturaChamado'),
+          tecnico: formData.get('tecnico'),
+          tipoAssistencia: formData.get('tipoAssistencia'),
+          localAssistencia: formData.get('localAssistencia'),
+          contato: formData.get('contato'),
+          telefone: formData.get('telefone'),
+          problemaApresentado: formData.get('problemaApresentado'),
+          fornecedor: formData.get('fornecedor'),
+          peca: formData.get('peca'),
+          observacoes: formData.get('observacoes'),
+          dataAtendimento: formData.get('dataAtendimento'),
+          tecnicoResponsavel: formData.get('tecnicoResponsavel'),
+          custoPecaMaoObra: formData.get('custoPecaMaoObra'),
+          custoViagemFrete: formData.get('custoViagemFrete'),
+          devolucaoPeca: formData.get('devolucaoPeca'),
+          garantiaFornecedor: formData.get('garantiaFornecedor'),
+          solucaoTecnica: formData.get('solucaoTecnica')
         };
         console.log('Dados da garantia:', garantia); // Log para depuração
         await window.api.inserirGarantia(garantia);

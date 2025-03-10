@@ -109,9 +109,9 @@ ipcMain.handle('inserir-venda', async (event, venda) => {
 ipcMain.handle('inserir-garantia', async (event, garantia) => {
   console.log('Inserindo garantia', garantia); // Log para depuração
   // Verificação dos campos obrigatórios
-  if (!garantia.data_servico) {
-    console.error('Erro: Campo data_servico não preenchido'); // Log para depuração
-    throw new Error('Campo data_servico não preenchido');
+  if (!garantia.dataAtendimento) {
+    console.error('Erro: Campo dataAtendimento não preenchido'); // Log para depuração
+    throw new Error('Campo dataAtendimento não preenchido');
   }
   return await db.inserirGarantia(
     garantia.atendimento_id,
@@ -121,7 +121,7 @@ ipcMain.handle('inserir-garantia', async (event, garantia) => {
     garantia.motivo,
     garantia.usuario_id,
     garantia.data_inicio,
-    garantia.data_servico,
+    garantia.dataAtendimento,
     garantia.prestador,
     garantia.nota,
     garantia.peca_substituida,
