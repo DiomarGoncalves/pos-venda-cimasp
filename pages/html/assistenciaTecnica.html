@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://cimasp.com.br data:;">
+    <title>Assistência Técnica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="../../public/images/favicon.ico">
+</head>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <a href="configuracao.html" class="text-blue-400 hover:text-blue-300">
+            <img src="https://cimasp.com.br/site/wp-content/uploads/2022/01/logo-cimasp-1024x242.png" alt="Logo" class="mx-auto mb-4 w-40">
+        </a>
+        <h1 class="text-xl">Assistência Técnica</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="relatorios.html" class="text-blue-400 hover:text-blue-300">Relatórios</a></li>
+                <li><a href="anexos.html" class="text-blue-400 hover:text-blue-300">Anexos</a></li>
+                <li>
+                    <button id="abrirPlanilha" class="text-blue-400 hover:text-blue-300">
+                        Abrir Planilha OFs
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main class="p-6">
+        <h2 class="text-2xl mb-4">Registrar Assistência Técnica</h2>
+        <form id="assistenciaForm" class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4">
+            <div>
+                <label for="of" class="block">OF:</label>
+                <input type="text" id="of" name="of" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="equipamento" class="block">Equipamento:</label>
+                <input type="text" id="equipamento" name="equipamento" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="chassi" class="block">Chassi / Placa:</label>
+                <input type="text" id="chassi" name="chassi" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="cliente" class="block">Cliente:</label>
+                <input type="text" id="cliente" name="cliente" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="dataFabricacao" class="block">Data Fabricação:</label>
+                <input type="date" id="dataFabricacao" name="dataFabricacao" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="dataAberturaChamado" class="block">Data Abertura Chamado:</label>
+                <input type="date" id="dataAberturaChamado" name="dataAberturaChamado" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="tecnico" class="block">Técnico:</label>
+                <input type="text" id="tecnico" name="tecnico" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="tipoAssistencia" class="block">Tipo Assistência:</label>
+                <select id="tipoAssistencia" name="tipoAssistencia" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+                    <option value="CORTESIA">CORTESIA</option>
+                    <option value="ASSISTENCIA">ASSISTÊNCIA</option>
+                    <option value="NÃO PROCEDE">NÃO PROCEDE</option>
+                </select>
+            </div>
+            <div>
+                <label for="localAssistencia" class="block">Local Assistência:</label>
+                <input type="text" id="localAssistencia" name="localAssistencia" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="contato" class="block">Contato:</label>
+                <input type="text" id="contato" name="contato" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="telefone" class="block">Telefone:</label>
+                <input type="text" id="telefone" name="telefone" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="problemaApresentado" class="block">Problema Apresentado:</label>
+                <input type="text" id="problemaApresentado" name="problemaApresentado" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="fornecedor" class="block">Fornecedor:</label>
+                <input type="text" id="fornecedor" name="fornecedor" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="peca" class="block">Peça:</label>
+                <input type="text" id="peca" name="peca" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="dataAtendimento" class="block">Data Atendimento:</label>
+                <input type="date" id="dataAtendimento" name="dataAtendimento" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="tecnicoResponsavel" class="block">Técnico Responsável:</label>
+                <input type="text" id="tecnicoResponsavel" name="tecnicoResponsavel" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="custoPecaMaoObra" class="block">Custo Peça/Mão de Obra:</label>
+                <input type="number" id="custoPecaMaoObra" name="custoPecaMaoObra" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="custoViagemFrete" class="block">Custo Viagem/Frete:</label>
+                <input type="number" id="custoViagemFrete" name="custoViagemFrete" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="devolucaoPeca" class="block">Devolução Peça:</label>
+                <input type="text" id="devolucaoPeca" name="devolucaoPeca" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="garantiaFornecedor" class="block">Garantia Fornecedor:</label>
+                <input type="text" id="garantiaFornecedor" name="garantiaFornecedor" class="w-full p-2 bg-gray-700 rounded border border-gray-600">
+            </div>
+            <div>
+                <label for="solucaoTecnica" class="block">Solução Técnica:</label>
+                <textarea id="solucaoTecnica" name="solucaoTecnica" class="w-full p-2 bg-gray-700 rounded border border-gray-600"></textarea>
+            </div>
+            <div>
+                <label for="observacoes" class="block">Observações:</label>
+                <textarea id="observacoes" name="observacoes" class="w-full p-2 bg-gray-700 rounded border border-gray-600"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Salvar</button>
+        </form>
+
+        <h2 class="text-2xl mt-6 mb-4">Lista de Assistências Técnicas</h2>
+        <table class="w-full text-left border border-gray-700">
+            <thead>
+                <tr class="bg-gray-800">
+                    <th class="p-2 border border-gray-700">OF</th>
+                    <th class="p-2 border border-gray-700">Equipamento</th>
+                    <th class="p-2 border border-gray-700">Cliente</th>
+                    <th class="p-2 border border-gray-700">Data Atendimento</th>
+                    <th class="p-2 border border-gray-700">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="listaAssistencias">
+                <!-- As assistências técnicas serão carregadas aqui -->
+            </tbody>
+        </table>
+    </main>
+    <footer class="bg-gray-800 p-4 text-center">
+        <p>&copy; 2025 Sistema de Assistência Técnica</p>
+    </footer>
+    <script src="../../pages/js/assistenciaTecnica.js"></script>
+</body>
+</html>

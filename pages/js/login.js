@@ -1,25 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-      loginForm.addEventListener('submit', async (e) => {
+
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const result = await window.api.login(username, password);
-        if (result.success) {
-          const vendas = await window.api.listarVendas();
-          vendas.forEach(venda => {
-            const prazo = new Date(venda.prazo_fabricacao);
-            const hoje = new Date();
-            const diasRestantes = Math.ceil((prazo - hoje) / (1000 * 60 * 60 * 24));
-            if (diasRestantes > 0) {
-              alert(`Faltam ${diasRestantes} dias para entregar o produto ${venda.produto}`);
+
+        try {
+            const response = await window.api.login(username, password);
+            if (response.success) {
+                console.log('Login com username:', username);
+                // Redirecionar para a página principal
+                window.location.href = 'assistenciaTecnica.html';
+            } else {
+                alert('Usuário ou senha inválidos.');
             }
-          });
-          window.location.href = 'index.html';
-        } else {
-          document.getElementById('error-message').innerText = 'Usuário ou senha incorretos';
+        } catch (error) {
+            console.error('Erro ao realizar login:', error);
         }
-      });
-    }
+    });
 });

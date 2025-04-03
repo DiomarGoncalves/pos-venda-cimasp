@@ -1,9 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const db = require('./database/database');
-const fs = require('fs');
-const os = require('os');
-const { v4: uuidv4 } = require('uuid');
+const { gerarPdf, gerarXlsx } = require('./relatorios/relatorios');
+const xlsx = require('xlsx');
+const { exec } = require('child_process'); // Importa o módulo child_process
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -17,9 +17,6 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, '../pages/html/login.html'));
-
-  // Open the DevTools (optional)
-  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
@@ -37,221 +34,142 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('inserir-atendimento', async (event, atendimento) => {
-  return await db.inserirAtendimento(atendimento.telefone, atendimento.nome, atendimento.endereco, atendimento.motivo, atendimento.usuario_id, atendimento.data_inicio, atendimento.anexos);
-});
-
-ipcMain.handle('excluir-atendimento', async (event, id) => {
-  console.log('Excluindo atendimento com ID:', id); // Log para depuração
-  return await db.excluirAtendimento(id);
+  return await db.inserirAtendimento(atendimento.telefone, atendimento.nome, atendimento.motivo);
 });
 
 ipcMain.handle('listar-atendimentos', async () => {
-  console.log('Listando atendimentos'); // Log para depuração
   return await db.listarAtendimentos();
 });
 
 ipcMain.handle('login', async (event, username, password) => {
-  console.log('Login com username:', username); // Log para depuração
   const user = await db.autenticarUsuario(username, password);
-  if (user) {
-    return { success: true };
-  } else {
-    return { success: false };
-  }
+  return user ? { success: true } : { success: false };
 });
 
 ipcMain.handle('cadastrar-usuario', async (event, username, password) => {
-  console.log('Cadastrando usuario', username); // Log para depuração
   try {
-    const userId = await db.inserirUsuario(username, password);
-    return userId;
-  } catch (error) {
+    return await db.inserirUsuario(username, password);
+  } catch {
     return null;
   }
 });
 
-ipcMain.handle('inserir-venda', async (event, venda) => {
-  console.log('Inserindo venda', venda); // Log para depuração
+ipcMain.handle('listar-usuarios', async () => {
+  return await db.listarUsuarios();
+});
 
-  // Verificação dos campos obrigatórios
-  if (!venda.produto || !venda.preco_custo || !venda.preco_venda || !venda.data_venda || !venda.vendedor || !venda.cliente || !venda.nota_fiscal || !venda.pedido_venda) {
-    console.error('Erro: Campos obrigatórios não preenchidos'); // Log para depuração
-    throw new Error('Campos obrigatórios não preenchidos');
-  }
+ipcMain.handle('listar-assistencias', async () => {
+  return await db.listarAssistencias();
+});
 
+ipcMain.handle('inserir-assistencia', async (event, assistencia) => {
+  return await db.inserirAssistencia(assistencia);
+});
+
+ipcMain.handle('editar-assistencia', async (event, id, assistencia) => {
+  return await db.editarAssistencia(id, assistencia);
+});
+
+ipcMain.handle('excluir-assistencia', async (event, id) => {
+  return await db.excluirAssistencia(id);
+});
+
+ipcMain.handle('listar-equipamentos', async () => {
+  return await db.listarEquipamentos();
+});
+
+ipcMain.handle('inserir-equipamento', async (event, nome) => {
+  return await db.inserirEquipamento(nome);
+});
+
+ipcMain.handle('excluir-equipamento', async (event, id) => {
+  return await db.excluirEquipamento(id);
+});
+
+ipcMain.handle('gerar-relatorio-pdf', async () => {
+  return await gerarPdf();
+});
+
+ipcMain.handle('gerar-relatorio-xlsx', async () => {
+  return await gerarXlsx();
+});
+
+function carregarPlanilhaOfs() {
   try {
-    const vendaId = await db.inserirVenda(
-      venda.atendimento_id,
-      venda.telefone,
-      venda.nome,
-      venda.endereco,
-      venda.motivo,
-      venda.usuario_id,
-      venda.data_inicio,
-      venda.produto,
-      venda.preco_custo,
-      venda.preco_venda,
-      venda.data_venda,
-      venda.vendedor,
-      venda.cliente,
-      venda.nota_fiscal,
-      venda.pedido_venda,
-      venda.prazo_fabricacao
-    );
-    console.log('Venda inserida com ID:', vendaId); // Log para depuração
-    return vendaId;
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    console.log(`Tentando carregar a planilha em: ${filePath}`);
+    const workbook = xlsx.readFile(filePath);
+    console.log('Planilha carregada com sucesso.');
+    const sheet = workbook.Sheets['Controle de OF'];
+    if (!sheet) {
+      throw new Error('A aba "Controle de OF" não foi encontrada na planilha.');
+    }
+    console.log('Aba "Controle de OF" encontrada.');
+
+    // Converte os dados da planilha para JSON
+    const rawData = xlsx.utils.sheet_to_json(sheet);
+
+    // Mapeia as colunas para os nomes esperados no frontend
+    const mappedData = rawData.map(row => ({
+      of: row['Relatório de Produção'] || 'N/A',
+      cliente: row['__EMPTY'] || 'N/A',
+      qtd: row['__EMPTY_1'] || 'N/A',
+      equipamento: row['__EMPTY_2'] || 'N/A',
+      recebOf: row['__EMPTY_3'] || 'N/A',
+      chassi: row['__EMPTY_4'] || 'N/A',
+      chegadaChassi: row['__EMPTY_5'] || 'N/A',
+      numChassi: row['__EMPTY_6'] || 'N/A',
+      serie: row['__EMPTY_7'] || 'N/A',
+      situacao: row['__EMPTY_8'] || 'N/A',
+      fabr: row['__EMPTY_9'] || 'N/A',
+      dataSaida: row['__EMPTY_10'] || 'N/A',
+      entregaTecnica: row['__EMPTY_11'] || 'N/A',
+      cidade: row['__EMPTY_12'] || 'N/A',
+      uf: row['__EMPTY_13'] || 'N/A',
+    }));
+
+    return mappedData;
   } catch (error) {
-    console.error('Erro ao inserir venda main:', error.message); // Log para depuração
+    console.error('Erro ao carregar a planilha de OFs:', error);
+    throw error;
+  }
+}
+
+ipcMain.handle('listar-ofs', async () => {
+  try {
+    return carregarPlanilhaOfs();
+  } catch (error) {
+    console.error('Erro ao carregar a planilha de OFs:', error);
     throw error;
   }
 });
 
-ipcMain.handle('inserir-garantia', async (event, garantia) => {
-  console.log('Inserindo garantia', garantia); // Log para depuração
-  // Verificação dos campos obrigatórios
-  if (!garantia.dataAtendimento) {
-    console.error('Erro: Campo dataAtendimento não preenchido'); // Log para depuração
-    throw new Error('Campo dataAtendimento não preenchido');
+ipcMain.handle('carregar-planilha-ofs', async () => {
+  try {
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    console.log(`Carregando planilha em: ${filePath}`);
+    const workbook = xlsx.readFile(filePath);
+    const sheet = workbook.Sheets['Controle de OF'];
+    if (!sheet) throw new Error('A aba "Controle de OF" não foi encontrada na planilha.');
+    return xlsx.utils.sheet_to_json(sheet);
+  } catch (error) {
+    console.error('Erro ao carregar a planilha de OFs:', error);
+    throw error;
   }
-  return await db.inserirGarantia(
-    garantia.atendimento_id,
-    garantia.telefone,
-    garantia.nome,
-    garantia.endereco,
-    garantia.motivo,
-    garantia.usuario_id,
-    garantia.data_inicio,
-    garantia.dataAtendimento,
-    garantia.prestador,
-    garantia.nota,
-    garantia.peca_substituida,
-    garantia.valor
-  );
 });
 
-ipcMain.handle('listar-usuarios', async () => {
-  console.log('Listando usuarios'); // Log para depuração
-  return await db.listarUsuarios();
-});
-
-ipcMain.handle('listar-vendas', async () => {
-  console.log('Listando vendas'); // Log para depuração
-  return await db.listarVendas();
-});
-
-ipcMain.handle('excluir-venda', async (event, id) => {
-  console.log('Excluindo venda com ID:', id); // Log para depuração
-  return await db.excluirVenda(id);
-});
-
-ipcMain.handle('inserir-anexos', async (event, clienteNome, tipo, files) => {
-  console.log('Inserindo anexos para cliente:', clienteNome, 'Tipo:', tipo); // Log para depuração
-  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
-  const clienteDir = path.join(baseDir, clienteNome);
-  const tipoDir = path.join(clienteDir, tipo);
-
-  if (!fs.existsSync(clienteDir)) {
-    fs.mkdirSync(clienteDir);
-  }
-  if (!fs.existsSync(tipoDir)) {
-    fs.mkdirSync(tipoDir);
-  }
-
-  const anexos = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const fileName = file.name;
-    const filePath = path.join(tipoDir, fileName);
-    fs.writeFileSync(filePath, Buffer.from(file.buffer));
-    anexos.push(filePath);
-  }
-  return anexos.join(',');
-});
-
-ipcMain.handle('listar-garantias', async () => {
-  console.log('Listando garantias'); // Log para depuração
-  return await db.listarGarantias();
-});
-
-ipcMain.handle('inserir-comissao', async (event, comissao) => {
-  console.log('Inserindo comissão', comissao); // Log para depuração
-  return await db.inserirComissao(comissao.venda_id, comissao.porcentagem);
-});
-
-ipcMain.handle('listar-comissoes', async () => {
-  console.log('Listando comissões'); // Log para depuração
-  return await db.listarComissoes();
-});
-
-ipcMain.handle('listar-configuracoes', async () => {
-  console.log('Listando configurações'); // Log para depuração
-  return await db.listarConfiguracoes();
-});
-
-ipcMain.handle('salvar-configuracao', async (event, configuracao) => {
-  console.log('Salvando configuração', configuracao); // Log para depuração
-  return await db.salvarConfiguracao(configuracao.usuario, configuracao.acesso);
-});
-
-ipcMain.handle('excluir-configuracao', async (event, id) => {
-  console.log('Excluindo configuração com ID:', id); // Log para depuração
-  return await db.excluirConfiguracao(id);
-});
-
-ipcMain.handle('mover-para-historico', async (event, id) => {
-  console.log('Movendo atendimento para histórico com ID:', id); // Log para depuração
-  return await db.excluirAtendimento(id);
-});
-
-ipcMain.handle('verificar-permissao', async (event, username, permissao) => {
-  console.log(`Verificando permissão ${permissao} para o usuário:`, username); // Log para depuração
-  const user = await db.obterPermissaoUsuario(username, permissao);
-  return user ? true : false;
-});
-
-ipcMain.handle('editar-permissao-usuario', async (event, id, permissao) => {
-  console.log(`Editando permissão do usuário com ID: ${id}`); // Log para depuração
-  return await db.editarPermissaoUsuario(id, permissao);
-});
-
-ipcMain.handle('listar-historico-atendimentos', async () => {
-  console.log('Listando histórico de atendimentos'); // Log para depuração
-  return await db.listarHistoricoAtendimentos();
-});
-
-ipcMain.handle('editar-atendimento', async (event, id, atendimento) => {
-  console.log('Editando atendimento com ID:', id, atendimento); // Log para depuração
-  return await db.editarAtendimento(id, atendimento.telefone, atendimento.nome, atendimento.endereco, atendimento.motivo);
-});
-
-ipcMain.handle('listar-anexos', async (event, clienteNome) => {
-  console.log('Listando anexos para cliente:', clienteNome); // Log para depuração
-  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
-  const clienteDir = path.join(baseDir, clienteNome);
-  if (!fs.existsSync(clienteDir)) {
-    return '';
-  }
-
-  const anexos = [];
-  const tipos = fs.readdirSync(clienteDir);
-  tipos.forEach(tipo => {
-    const tipoDir = path.join(clienteDir, tipo);
-    const files = fs.readdirSync(tipoDir);
-    files.forEach(file => {
-      anexos.push(path.join(tipoDir, file));
+ipcMain.handle('abrir-planilha-ofs', async () => {
+  try {
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    console.log(`Abrindo planilha em: ${filePath}`);
+    exec(`start "" "${filePath}"`, (error) => {
+      if (error) {
+        console.error('Erro ao abrir a planilha:', error);
+        throw error;
+      }
     });
-  });
-
-  return anexos.join(',');
-});
-
-ipcMain.handle('listar-pastas-clientes', async () => {
-  console.log('Listando pastas de clientes'); // Log para depuração
-  const baseDir = '\\\\192.168.1.2\\publica\\Diomar Gonçalves\\SISTEMA-POSVENDA';
-  if (!fs.existsSync(baseDir)) {
-    return [];
+  } catch (error) {
+    console.error('Erro ao tentar abrir a planilha:', error);
+    throw error;
   }
-
-  const pastas = fs.readdirSync(baseDir);
-  return pastas;
 });

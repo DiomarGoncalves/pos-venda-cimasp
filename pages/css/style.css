@@ -7,6 +7,17 @@ body {
 h1, h2 {
   color: #ffffff;
 }
+#assistenciaForm div{
+  max-width: 15%;
+  max-height: 10%;
+}
+#assistenciaForm {
+  align-items: self-end;
+    display: flex;
+    align-content: center;
+    flex-wrap: wrap;
+
+}
 
 label {
   display: block;
