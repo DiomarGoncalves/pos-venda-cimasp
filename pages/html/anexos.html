@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anexos</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://cimasp.com.br data:;">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Estilizar a barra de rolagem */
@@ -35,8 +36,9 @@
       <h1 class="text-xl">Assistência Técnica</h1>
       <nav>
           <ul class="flex space-x-4">
+              <li><a href="assistenciaTecnica.html" class="text-blue-400 hover:text-blue-300">Assistencia Técnica</a></li>
               <li><a href="relatorios.html" class="text-blue-400 hover:text-blue-300">Relatórios</a></li>
-              <li><a href="anexos.html" class="text-blue-400 hover:text-blue-300">Anexos</a></li>
+              <li><a href="anexos.html" class="text-blue-400 hover:text-blue-300 bg-gray-700">Anexos</a></li>
               <li>
                   <button id="abrirPlanilha" class="text-blue-400 hover:text-blue-300">
                       Abrir Planilha OFs
@@ -44,7 +46,7 @@
               </li>
           </ul>
       </nav>
-    </header>
+  </header>
     <main class="p-6">
       <h2 class="text-2xl mb-4">Inserir Anexos</h2>
       <form
@@ -60,18 +62,6 @@
             required
             class="w-full p-2 bg-gray-700 rounded border border-gray-600"
           />
-        </div>
-        <div>
-          <label for="tipo" class="block">Tipo:</label>
-          <select
-            id="tipo"
-            name="tipo"
-            required
-            class="w-full p-2 bg-gray-700 rounded border border-gray-600"
-          >
-            <option value="venda">Venda</option>
-            <option value="garantia">Garantia</option>
-          </select>
         </div>
         <div>
           <label for="anexos" class="block">Selecione os Arquivos:</label>
@@ -92,7 +82,7 @@
         </button>
       </form>
 
-      <h2 class="text-2xl mt-6 mb-4">Visualizar Anexos</h2>
+      <!-- <h2 class="text-2xl mt-6 mb-4">Visualizar Anexos</h2>
       <form
         id="visualizarForm"
         class="bg-gray-800 p-6 rounded-lg shadow-lg grid grid-cols-1 gap-4"
@@ -115,7 +105,7 @@
         >
           Visualizar Anexos
         </button>
-      </form>
+      </form> -->
       <div id="anexosLista" class="mt-4">
         <!-- Lista de anexos será carregada aqui -->
       </div>

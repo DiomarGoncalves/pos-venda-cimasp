@@ -1,6 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
-const dbPath = path.join("\\\\192.168.1.2\\publica\\Diomar Gonçalves\\banco de dados", "PosVenda.db");
+const dbPath = path.join("\\\\192.168.1.2\\publica\\POS-VENDAS\\sistema\\banco de dados", "PosVenda.db");
 const db = new sqlite3.Database(dbPath);
 
 // const dbPath = path.join("\\\\192.168.1.2\\publica\\Diomar Gonçalves\\banco de dados", "PosVenda.db"); // link do banco de dados do servidor fisico

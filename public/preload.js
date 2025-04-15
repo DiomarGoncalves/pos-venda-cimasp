@@ -18,4 +18,7 @@ contextBridge.exposeInMainWorld('api', {
   listarOfs: () => ipcRenderer.invoke('listar-ofs'),
   carregarPlanilhaOfs: () => ipcRenderer.invoke('carregar-planilha-ofs'),
   abrirPlanilhaOfs: () => ipcRenderer.invoke('abrir-planilha-ofs'),
+  listarPastasClientes: () => ipcRenderer.invoke('listarPastasClientes'),
+  listarAnexos: (clienteNome, tipo) => ipcRenderer.invoke('listarAnexos', clienteNome, tipo),
+  inserirAnexos: (clienteNome, tipo, fileData) => ipcRenderer.invoke('inserirAnexos', clienteNome, tipo, fileData),
 });

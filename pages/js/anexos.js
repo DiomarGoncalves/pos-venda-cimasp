@@ -58,9 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const formData = new FormData(anexosForm);
         const clienteNome = formData.get('clienteNome');
-        const tipo = formData.get('tipo');
         const files = formData.getAll('anexos');
         const fileData = [];
+
+        if (!clienteNome || clienteNome.trim() === '') {
+            showMessage('O nome do cliente é obrigatório!', 'error');
+            return;
+        }
 
         for (let file of files) {
             fileData.push({
@@ -69,38 +73,69 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        await window.api.inserirAnexos(clienteNome, tipo, fileData);
-        showMessage('Anexos inseridos com sucesso!', 'success');
-        anexosForm.reset();
-        listarPastasClientes();
+        try {
+            await window.api.inserirAnexos(clienteNome.trim(), fileData);
+            showMessage('Anexos inseridos com sucesso!', 'success');
+            anexosForm.reset();
+            listarPastasClientes();
+        } catch (error) {
+            console.error('Erro ao inserir anexos:', error);
+            showMessage('Erro ao inserir anexos!', 'error');
+        }
     });
 
-    visualizarForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(visualizarForm);
-        const clienteNome = formData.get('clienteNomeVisualizar');
-        const anexos = await window.api.listarAnexos(clienteNome);
+    // visualizarForm.addEventListener('submit', async (e) => {
+    //     e.preventDefault();
+    //     const formData = new FormData(visualizarForm);
+    //     const clienteNome = formData.get('clienteNomeVisualizar');
+    //     const anexos = await window.api.listarAnexos(clienteNome);
 
-        anexosLista.innerHTML = '';
-        anexos.split(',').forEach(anexo => {
-            const link = document.createElement('a');
-            link.href = anexo;
-            link.target = '_blank';
-            link.className = 'block text-blue-400 hover:text-blue-300';
-            link.innerText = anexo;
-            anexosLista.appendChild(link);
-        });
-    });
+    //     anexosLista.innerHTML = '';
+    //     anexos.split(',').forEach(anexo => {
+    //         const link = document.createElement('a');
+    //         link.href = anexo;
+    //         link.target = '_blank';
+    //         link.className = 'block text-blue-400 hover:text-blue-300';
+    //         link.innerText = anexo;
+    //         anexosLista.appendChild(link);
+    //     });
+    // });
 
     async function listarPastasClientes() {
-        const pastas = await window.api.listarPastasClientes();
-        pastasClientes.innerHTML = '';
-        pastas.forEach(pasta => {
-            const div = document.createElement('div');
-            div.className = 'p-2 bg-gray-700 rounded border border-gray-600';
-            div.innerText = pasta;
-            pastasClientes.appendChild(div);
-        });
+        try {
+            const pastas = await window.api.listarPastasClientes();
+            pastasClientes.innerHTML = '';
+            pastas.forEach(pasta => {
+                const div = document.createElement('div');
+                div.className = 'p-2 bg-gray-700 rounded border border-gray-600 cursor-pointer hover:bg-gray-600';
+                div.innerText = pasta;
+
+                // Adiciona evento de clique para abrir os anexos da pasta
+                div.addEventListener('click', async () => {
+                    try {
+                        const anexos = await window.api.listarAnexos(pasta);
+                        anexosLista.innerHTML = '';
+                        anexos.forEach(anexo => {
+                            const link = document.createElement('a');
+                            link.href = anexo;
+                            link.target = '_blank';
+                            link.className = 'block text-blue-400 hover:text-blue-300';
+                            link.innerText = anexo.split('\\').pop(); // Exibe apenas o nome do arquivo
+                            anexosLista.appendChild(link);
+                        });
+                        showMessage(`Anexos carregados para a pasta: ${pasta}`, 'info');
+                    } catch (error) {
+                        console.error('Erro ao listar anexos:', error);
+                        showMessage('Erro ao listar anexos!', 'error');
+                    }
+                });
+
+                pastasClientes.appendChild(div);
+            });
+        } catch (error) {
+            console.error('Erro ao listar pastas de clientes:', error);
+            showMessage('Erro ao listar pastas de clientes!', 'error');
+        }
     }
 
     listarPastasClientes();
