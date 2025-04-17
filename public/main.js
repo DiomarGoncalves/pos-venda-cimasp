@@ -98,7 +98,7 @@ ipcMain.handle('gerar-relatorio-xlsx', async () => {
 
 function carregarPlanilhaOfs() {
   try {
-    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Diomar.xlsx";
     console.log(`Tentando carregar a planilha em: ${filePath}`);
     const workbook = xlsx.readFile(filePath);
     console.log('Planilha carregada com sucesso.');
@@ -148,7 +148,7 @@ ipcMain.handle('listar-ofs', async () => {
 
 ipcMain.handle('carregar-planilha-ofs', async () => {
   try {
-    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Diomar.xlsx";
     console.log(`Carregando planilha em: ${filePath}`);
     const workbook = xlsx.readFile(filePath);
     const sheet = workbook.Sheets['Controle de OF'];
@@ -162,7 +162,7 @@ ipcMain.handle('carregar-planilha-ofs', async () => {
 
 ipcMain.handle('abrir-planilha-ofs', async () => {
   try {
-    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Kaio.xlsx";
+    const filePath = "\\\\192.168.1.2\\publica\\Pasta de OF - Originais\\1 - Relatório de Produção - 2015 - Leandro-Diomar.xlsx";
     console.log(`Abrindo planilha em: ${filePath}`);
     exec(`start "" "${filePath}"`, (error) => {
       if (error) {
