@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('api', {
   excluirAssistencia: (id) => ipcRenderer.invoke('excluir-assistencia', id),
   listarEquipamentos: () => ipcRenderer.invoke('listar-equipamentos'),
   inserirEquipamento: (nome) => ipcRenderer.invoke('inserir-equipamento', nome),
-  excluirEquipamento: (id) => ipcRenderer.invoke('excluir-equipmento', id),
+  excluirEquipamento: (id) => ipcRenderer.invoke('excluir-equipamento', id),
   gerarRelatorioPdf: () => ipcRenderer.invoke('gerar-relatorio-pdf'),
   gerarRelatorioXlsx: () => ipcRenderer.invoke('gerar-relatorio-xlsx'),
   listarOfs: () => ipcRenderer.invoke('listar-ofs'),

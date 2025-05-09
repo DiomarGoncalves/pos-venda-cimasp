@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const formData = new FormData(userForm);
       const userId = formData.get('username');
       const permissao = `${formData.get('userAccess')},${formData.get('commissionAccess')}`;
-      await window.api.editarPermissaoUsuario(userId, permissao);
+      await window.api.editarPermissaoUsuario(userId, permissao); // Corrigido para usar o método correto
       carregarUsuarios();
     });
   }

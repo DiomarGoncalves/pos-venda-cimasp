@@ -4,12 +4,15 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    icon: './pages/assets/favicon', // Adicionado o ícone para empacotamento (sem extensão)
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: './pages/assets/favicon.ico', // Ícone para o instalador do Windows
+      },
     },
     {
       name: '@electron-forge/maker-zip',
@@ -17,11 +20,15 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        icon: './pages/assets/favicon.png', // Ícone para pacotes Linux
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        icon: './pages/assets/favicon.png', // Ícone para pacotes Linux
+      },
     },
   ],
   plugins: [

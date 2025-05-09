@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon"> <!-- Adicionado o favicon -->
 </head>
 <body class="bg-gray-900 flex justify-center items-center h-screen">
     <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-96 text-center">
@@ -13,11 +14,23 @@
         <form id="cadastroForm" class="flex flex-col">
             <input type="text" id="newUsername" name="newUsername" placeholder="Usuário" class="p-2 rounded bg-gray-700 text-white mb-2" required>
             <input type="password" id="newPassword" name="newPassword" placeholder="Senha" class="p-2 rounded bg-gray-700 text-white mb-2" required>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirme a Senha" class="p-2 rounded bg-gray-700 text-white mb-2" required>
             <button type="submit" class="bg-green-600 hover:bg-green-500 text-white py-2 rounded">Cadastrar</button>
         </form>
+        <div id="toast-container"></div> <!-- Adicionado para exibir mensagens -->
         <p class="text-gray-400 mt-4">Já tem uma conta? <a href="login.html" class="text-blue-500">Faça login</a></p>
         <div id="error-message" class="text-red-500 mt-2"></div>
     </div>
     <script src="../js/cadastro.js"></script>
+    <script>
+        document.getElementById('cadastroForm').addEventListener('submit', (e) => {
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                document.getElementById('error-message').textContent = 'As senhas não coincidem!';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -153,6 +153,16 @@ function excluirEquipamento(id) {
   });
 }
 
+function editarPermissaoUsuario(userId, permissao) {
+  return new Promise((resolve, reject) => {
+    const query = `UPDATE usuarios SET permissao = ? WHERE id = ?`;
+    db.run(query, [permissao, userId], function (err) {
+      if (err) reject(err);
+      else resolve(this.changes);
+    });
+  });
+}
+
 module.exports = {
   inserirUsuario,
   autenticarUsuario,
@@ -164,4 +174,5 @@ module.exports = {
   inserirEquipamento,
   listarEquipamentos,
   excluirEquipamento,
+  editarPermissaoUsuario,
 };

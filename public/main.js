@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const db = require('./database/database');
 const { gerarPdf, gerarXlsx } = require('./relatorios/relatorios');
@@ -7,10 +7,13 @@ const { exec } = require('child_process'); // Importa o módulo child_process
 const fs = require('fs');
 const os = require('os');
 
+let mainWindow;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+  mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 700,
+    icon: path.join(__dirname, '../pages/assets/favicon.ico'), // Adicionado o ícone do aplicativo
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -19,6 +22,58 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, '../pages/html/login.html'));
+
+  // Define o menu apenas em ambiente de desenvolvimento
+  if (!app.isPackaged) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate([])); // Menu vazio para desenvolvimento
+  } else {
+    Menu.setApplicationMenu(null); // Remove o menu em produção
+  }
+}
+
+function createMenu() {
+  const menuTemplate = [
+    {
+      label: 'Navegação',
+      submenu: [
+        { label: 'Cadastro de Usuário', click: () => mainWindow.loadFile(path.join(__dirname, '../pages/html/cadastroUser.html')) },
+        { label: 'Assistência Técnica', click: () => mainWindow.loadFile(path.join(__dirname, '../pages/html/assistenciaTecnica.html')) },
+        { label: 'Anexos', click: () => mainWindow.loadFile(path.join(__dirname, '../pages/html/anexos.html')) },
+        { label: 'Relatórios', click: () => mainWindow.loadFile(path.join(__dirname, '../pages/html/relatorios.html')) },
+      ],
+    },
+    {
+      label: 'Planilha',
+      submenu: [
+        {
+          label: 'Abrir Planilha OFs',
+          click: async () => {
+            try {
+              await mainWindow.webContents.send('abrir-planilha-ofs');
+            } catch (error) {
+              console.error('Erro ao abrir a planilha:', error);
+            }
+          },
+        },
+      ],
+    },
+    {
+      label: 'Aplicação',
+      submenu: [
+        { role: 'reload' },
+        { role: 'quit', label: 'Sair' },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+
+  // Define o menu apenas em ambiente de desenvolvimento
+  if (!app.isPackaged) {
+    Menu.setApplicationMenu(menu);
+  } else {
+    Menu.setApplicationMenu(null); // Remove o menu em produção
+  }
 }
 
 app.whenReady().then(createWindow);
@@ -45,7 +100,11 @@ ipcMain.handle('listar-atendimentos', async () => {
 
 ipcMain.handle('login', async (event, username, password) => {
   const user = await db.autenticarUsuario(username, password);
-  return user ? { success: true } : { success: false };
+  if (user) {
+    createMenu(); // Define o menu após login bem-sucedido
+    return { success: true };
+  }
+  return { success: false };
 });
 
 ipcMain.handle('cadastrar-usuario', async (event, username, password) => {
@@ -85,7 +144,7 @@ ipcMain.handle('inserir-equipamento', async (event, nome) => {
 });
 
 ipcMain.handle('excluir-equipamento', async (event, id) => {
-  return await db.excluirEquipamento(id);
+  return await db.excluirEquipamento(id); // Corrigido o nome do método
 });
 
 ipcMain.handle('gerar-relatorio-pdf', async () => {
@@ -235,6 +294,17 @@ ipcMain.handle('listarAnexos', async (event, clienteNome) => {
     return anexos;
   } catch (error) {
     console.error('Erro ao listar anexos:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('editarPermissaoUsuario', async (event, userId, permissao) => {
+  try {
+    const query = `UPDATE usuarios SET permissao = ? WHERE id = ?`;
+    await db.run(query, [permissao, userId]);
+    return true;
+  } catch (error) {
+    console.error('Erro ao editar permissões:', error);
     throw error;
   }
 });

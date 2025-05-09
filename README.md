@@ -48,6 +48,8 @@ O projeto é organizado da seguinte forma:
 
 - Gerenciamento de assistência técnica com campos essenciais.
 - Gerenciamento de anexos com upload e visualização.
+- **Gerenciamento de permissões de usuários**: Controle de acesso por níveis de permissão.
+- **Navegação pelo menu do Electron**: Acesse rapidamente as páginas do sistema pelo menu superior.
 
 ## Licença
 
