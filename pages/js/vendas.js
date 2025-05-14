@@ -1,7 +1,20 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const vendaForm = document.getElementById('vendaForm');
   const listaVendas = document.getElementById('listaVendas');
+  const vendedorSelect = document.getElementById('vendedor');
   let vendaEditando = null;
+
+  // Preencher select de vendedores
+  async function carregarVendedores() {
+    const usuarios = await window.api.listarUsuarios();
+    vendedorSelect.innerHTML = '<option value="">Selecione o Vendedor</option>';
+    usuarios.forEach(usuario => {
+      const opt = document.createElement('option');
+      opt.value = usuario.nome;
+      opt.textContent = usuario.nome;
+      vendedorSelect.appendChild(opt);
+    });
+  }
 
   async function carregarVendas() {
     const vendas = await window.api.listarVendas();
@@ -11,13 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
       row.insertCell(0).innerText = venda.pedidoNectar || '';
       row.insertCell(1).innerText = venda.numeroNota || '';
       row.insertCell(2).innerText = venda.produto || '';
-      row.insertCell(3).innerText = venda.valor !== undefined && venda.valor !== null ? Number(venda.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
-      row.insertCell(4).innerText = venda.dataCotacao || '';
-      row.insertCell(5).innerText = venda.dataVenda || '';
-      row.insertCell(6).innerText = venda.vendedor || '';
-      row.insertCell(7).innerText = venda.situacao || '';
-      row.insertCell(8).innerText = venda.comissao !== undefined && venda.comissao !== null ? Number(venda.comissao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
-      const acoesCell = row.insertCell(9);
+      row.insertCell(3).innerText = venda.cliente || '';
+      row.insertCell(4).innerText = venda.valor !== undefined && venda.valor !== null ? Number(venda.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
+      row.insertCell(5).innerText = venda.dataCotacao || '';
+      row.insertCell(6).innerText = venda.dataVenda || '';
+      row.insertCell(7).innerText = venda.vendedor || '';
+      row.insertCell(8).innerText = venda.situacao || '';
+      row.insertCell(9).innerText = venda.comissao !== undefined && venda.comissao !== null ? Number(venda.comissao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
+      const acoesCell = row.insertCell(10);
       // Botão Editar
       const btnEditar = document.createElement('button');
       btnEditar.innerText = 'Editar';
@@ -37,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pedidoNectar').value = venda.pedidoNectar || '';
     document.getElementById('numeroNota').value = venda.numeroNota || '';
     document.getElementById('produto').value = venda.produto || '';
+    document.getElementById('cliente').value = venda.cliente || '';
     document.getElementById('valor').value = venda.valor || '';
     document.getElementById('dataCotacao').value = venda.dataCotacao || '';
     document.getElementById('dataVenda').value = venda.dataVenda || '';
@@ -66,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pedidoNectar: document.getElementById('pedidoNectar').value,
       numeroNota: document.getElementById('numeroNota').value,
       produto: document.getElementById('produto').value,
+      cliente: document.getElementById('cliente').value,
       valor: parseFloat(document.getElementById('valor').value) || 0,
       dataCotacao: document.getElementById('dataCotacao').value,
       dataVenda: document.getElementById('dataVenda').value,
@@ -82,5 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarVendas();
   });
 
+  await carregarVendedores();
   carregarVendas();
 });

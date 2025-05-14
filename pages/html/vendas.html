@@ -9,6 +9,20 @@
     :root {
       --cimasp-green: #00B050;
     }
+    ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1a1a1a;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #00b050;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #009444;
+      }
   </style>
 </head>
 <body class="bg-gray-900 text-white font-sans">
@@ -41,7 +55,11 @@
         <input type="number" id="valor" placeholder="Valor" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none" step="0.01">
         <input type="date" id="dataCotacao" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
         <input type="date" id="dataVenda" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
-        <input type="text" id="vendedor" placeholder="Vendedor" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
+        <select id="vendedor" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
+          <option value="">Selecione o Vendedor</option>
+          <!-- Opções serão preenchidas via JS -->
+        </select>
+        <input type="text" id="cliente" placeholder="Cliente" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
         <select id="situacao" class="p-3 rounded bg-gray-700 text-white focus:ring-2 focus:ring-[var(--cimasp-green)] outline-none">
           <option value="Em Cotação">Em Cotação</option>
           <option value="Finalizado">Finalizado</option>
@@ -66,6 +84,7 @@
               <th class="p-3 border border-gray-700">Data Cotação</th>
               <th class="p-3 border border-gray-700">Data Venda</th>
               <th class="p-3 border border-gray-700">Vendedor</th>
+              <th class="p-3 border border-gray-700">Cliente</th>
               <th class="p-3 border border-gray-700">Situação</th>
               <th class="p-3 border border-gray-700">Comissão (2,5%)</th>
               <th class="p-3 border border-gray-700">Ações</th>

@@ -55,7 +55,8 @@ db.serialize(() => {
     dataCotacao TEXT NOT NULL,
     dataVenda TEXT NOT NULL,
     vendedor TEXT NOT NULL,
-    situacao TEXT NOT NULL DEFAULT 'Em Cotação'
+    situacao TEXT NOT NULL DEFAULT 'Em Cotação',
+    cliente TEXT
   )`);
 });
 
@@ -177,7 +178,7 @@ function editarPermissaoUsuario(userId, permissao) {
 
 function inserirVenda(venda) {
   return new Promise((resolve, reject) => {
-    const query = `INSERT INTO vendas (pedidoNectar, numeroNota, produto, valor, dataCotacao, dataVenda, vendedor, situacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO vendas (pedidoNectar, numeroNota, produto, valor, dataCotacao, dataVenda, vendedor, situacao, cliente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const values = [
       venda.pedidoNectar,
       venda.numeroNota,
@@ -186,7 +187,8 @@ function inserirVenda(venda) {
       venda.dataCotacao,
       venda.dataVenda,
       venda.vendedor,
-      venda.situacao || 'Em Cotação'
+      venda.situacao || 'Em Cotação',
+      venda.cliente || ''
     ];
     db.run(query, values, function (err) {
       if (err) reject(err);
@@ -206,7 +208,7 @@ function listarVendas() {
 
 function editarVenda(id, venda) {
   return new Promise((resolve, reject) => {
-    const query = `UPDATE vendas SET pedidoNectar = ?, numeroNota = ?, produto = ?, valor = ?, dataCotacao = ?, dataVenda = ?, vendedor = ?, situacao = ? WHERE id = ?`;
+    const query = `UPDATE vendas SET pedidoNectar = ?, numeroNota = ?, produto = ?, valor = ?, dataCotacao = ?, dataVenda = ?, vendedor = ?, situacao = ?, cliente = ? WHERE id = ?`;
     const values = [
       venda.pedidoNectar,
       venda.numeroNota,
@@ -216,6 +218,7 @@ function editarVenda(id, venda) {
       venda.dataVenda,
       venda.vendedor,
       venda.situacao,
+      venda.cliente || '',
       id
     ];
     db.run(query, values, function (err) {
