@@ -21,4 +21,8 @@ contextBridge.exposeInMainWorld('api', {
   listarPastasClientes: () => ipcRenderer.invoke('listarPastasClientes'),
   listarAnexos: (clienteNome, tipo) => ipcRenderer.invoke('listarAnexos', clienteNome, tipo),
   inserirAnexos: (clienteNome, tipo, fileData) => ipcRenderer.invoke('inserirAnexos', clienteNome, tipo, fileData),
+  inserirVenda: (venda) => ipcRenderer.invoke('inserir-venda', venda),
+  listarVendas: () => ipcRenderer.invoke('listar-vendas'),
+  editarVenda: (id, venda) => ipcRenderer.invoke('editar-venda', id, venda),
+  excluirVenda: (id) => ipcRenderer.invoke('excluir-venda', id),
 });

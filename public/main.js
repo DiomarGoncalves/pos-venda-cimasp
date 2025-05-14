@@ -308,3 +308,19 @@ ipcMain.handle('editarPermissaoUsuario', async (event, userId, permissao) => {
     throw error;
   }
 });
+
+ipcMain.handle('inserir-venda', async (event, venda) => {
+  return await db.inserirVenda(venda);
+});
+
+ipcMain.handle('listar-vendas', async () => {
+  return await db.listarVendas();
+});
+
+ipcMain.handle('editar-venda', async (event, id, venda) => {
+  return await db.editarVenda(id, venda);
+});
+
+ipcMain.handle('excluir-venda', async (event, id) => {
+  return await db.excluirVenda(id);
+});

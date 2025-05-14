@@ -45,6 +45,18 @@ db.serialize(() => {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nome TEXT NOT NULL
       )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS vendas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pedidoNectar TEXT NOT NULL,
+    numeroNota TEXT NOT NULL,
+    produto TEXT NOT NULL,
+    valor REAL NOT NULL,
+    dataCotacao TEXT NOT NULL,
+    dataVenda TEXT NOT NULL,
+    vendedor TEXT NOT NULL,
+    situacao TEXT NOT NULL DEFAULT 'Em Cotação'
+  )`);
 });
 
 function inserirUsuario(nome, senha) {
@@ -163,6 +175,65 @@ function editarPermissaoUsuario(userId, permissao) {
   });
 }
 
+function inserirVenda(venda) {
+  return new Promise((resolve, reject) => {
+    const query = `INSERT INTO vendas (pedidoNectar, numeroNota, produto, valor, dataCotacao, dataVenda, vendedor, situacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const values = [
+      venda.pedidoNectar,
+      venda.numeroNota,
+      venda.produto,
+      venda.valor,
+      venda.dataCotacao,
+      venda.dataVenda,
+      venda.vendedor,
+      venda.situacao || 'Em Cotação'
+    ];
+    db.run(query, values, function (err) {
+      if (err) reject(err);
+      else resolve(this.lastID);
+    });
+  });
+}
+
+function listarVendas() {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT *, (valor * 0.025) as comissao FROM vendas`, [], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function editarVenda(id, venda) {
+  return new Promise((resolve, reject) => {
+    const query = `UPDATE vendas SET pedidoNectar = ?, numeroNota = ?, produto = ?, valor = ?, dataCotacao = ?, dataVenda = ?, vendedor = ?, situacao = ? WHERE id = ?`;
+    const values = [
+      venda.pedidoNectar,
+      venda.numeroNota,
+      venda.produto,
+      venda.valor,
+      venda.dataCotacao,
+      venda.dataVenda,
+      venda.vendedor,
+      venda.situacao,
+      id
+    ];
+    db.run(query, values, function (err) {
+      if (err) reject(err);
+      else resolve(this.changes);
+    });
+  });
+}
+
+function excluirVenda(id) {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM vendas WHERE id = ?`, [id], function (err) {
+      if (err) reject(err);
+      else resolve(this.changes);
+    });
+  });
+}
+
 module.exports = {
   inserirUsuario,
   autenticarUsuario,
@@ -175,4 +246,8 @@ module.exports = {
   listarEquipamentos,
   excluirEquipamento,
   editarPermissaoUsuario,
+  inserirVenda,
+  listarVendas,
+  editarVenda,
+  excluirVenda,
 };
