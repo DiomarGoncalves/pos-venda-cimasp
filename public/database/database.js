@@ -97,8 +97,33 @@ function listarUsuarios() {
 
 function inserirAssistencia(assistencia) {
   return new Promise((resolve, reject) => {
-    const query = `INSERT INTO assistencias (of, equipamento, chassi, cliente, dataFabricacao, dataAberturaChamado, tecnico, tipoAssistencia, localAssistencia, contato, telefone, problemaApresentado, fornecedor, peca, observacoes, dataAtendimento, tecnicoResponsavel, custoPecaMaoObra, custoViagemFrete, devolucaoPeca, garantiaFornecedor, solucaoTecnica) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const values = Object.values(assistencia);
+    const query = `INSERT INTO assistencias (
+      of, equipamento, chassi, cliente, dataFabricacao, dataAberturaChamado, tecnico, tipoAssistencia, localAssistencia, contato, telefone, problemaApresentado, fornecedor, peca, observacoes, dataAtendimento, tecnicoResponsavel, custoPecaMaoObra, custoViagemFrete, devolucaoPeca, garantiaFornecedor, solucaoTecnica
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const values = [
+      assistencia.of,
+      assistencia.equipamento,
+      assistencia.chassi,
+      assistencia.cliente,
+      assistencia.dataFabricacao,
+      assistencia.dataAberturaChamado,
+      assistencia.tecnico,
+      assistencia.tipoAssistencia,
+      assistencia.localAssistencia,
+      assistencia.contato,
+      assistencia.telefone,
+      assistencia.problemaApresentado,
+      assistencia.fornecedor,
+      assistencia.peca,
+      assistencia.observacoes,
+      assistencia.dataAtendimento,
+      assistencia.tecnicoResponsavel,
+      assistencia.custoPecaMaoObra,
+      assistencia.custoViagemFrete,
+      assistencia.devolucaoPeca,
+      assistencia.garantiaFornecedor,
+      assistencia.solucaoTecnica
+    ];
     db.run(query, values, function (err) {
       if (err) reject(err);
       else resolve(this.lastID);

@@ -13,7 +13,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, '../pages/assets/favicon.ico'), // Adicionado o ícone do aplicativo
+    icon: path.join(__dirname, '../pages/assets/favicon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -26,6 +26,7 @@ function createWindow() {
   // Define o menu apenas em ambiente de desenvolvimento
   if (!app.isPackaged) {
     Menu.setApplicationMenu(Menu.buildFromTemplate([])); // Menu vazio para desenvolvimento
+    mainWindow.webContents.openDevTools(); // Abre o DevTools automaticamente em desenvolvimento
   } else {
     Menu.setApplicationMenu(null); // Remove o menu em produção
   }
@@ -124,6 +125,7 @@ ipcMain.handle('listar-assistencias', async () => {
 });
 
 ipcMain.handle('inserir-assistencia', async (event, assistencia) => {
+  console.log('Assistência recebida backend:', assistencia); // Log para depuração
   return await db.inserirAssistencia(assistencia);
 });
 

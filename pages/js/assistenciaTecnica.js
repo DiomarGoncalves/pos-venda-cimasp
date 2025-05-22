@@ -145,9 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const formData = new FormData(assistenciaForm);
             const assistencia = Object.fromEntries(formData.entries());
+            console.log('Assistência a ser inserida frontend:', assistencia); // Log para depuração
 
             try {
                 const id = await window.api.inserirAssistencia(assistencia);
+
                 assistencia.id = id;
                 adicionarAssistencia(assistencia);
                 showMessage('Assistência inserida com sucesso.', 'success');
