@@ -21,17 +21,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     listaVendas.innerHTML = '';
     vendas.forEach(venda => {
       const row = listaVendas.insertRow();
-      row.insertCell(0).innerText = venda.pedidoNectar || '';
-      row.insertCell(1).innerText = venda.numeroNota || '';
-      row.insertCell(2).innerText = venda.produto || '';
-      row.insertCell(3).innerText = venda.cliente || '';
-      row.insertCell(4).innerText = venda.valor !== undefined && venda.valor !== null ? Number(venda.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
-      row.insertCell(5).innerText = venda.dataCotacao || '';
-      row.insertCell(6).innerText = venda.dataVenda || '';
-      row.insertCell(7).innerText = venda.vendedor || '';
-      row.insertCell(8).innerText = venda.situacao || '';
-      row.insertCell(9).innerText = venda.comissao !== undefined && venda.comissao !== null ? Number(venda.comissao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '';
-      const acoesCell = row.insertCell(10);
+      function addCell(text) {
+        const cell = row.insertCell();
+        cell.innerText = text;
+        cell.style.paddingLeft = '5px';
+        cell.style.paddingRight = '5px';
+        return cell;
+      }
+      addCell(venda.pedidoNectar || '');
+      addCell(venda.numeroNota || '');
+      addCell(venda.cliente || '');
+      addCell(venda.produto || '');
+      addCell(venda.valor !== undefined && venda.valor !== null ? Number(venda.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '');
+      addCell(venda.dataCotacao || '');
+      addCell(venda.dataVenda || '');
+      addCell(venda.vendedor || '');
+      addCell(venda.situacao || '');
+      addCell(venda.comissao !== undefined && venda.comissao !== null ? Number(venda.comissao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '');
+      const acoesCell = row.insertCell();
+      acoesCell.style.paddingLeft = '5px';
+      acoesCell.style.paddingRight = '5px';
       // Botão Editar
       const btnEditar = document.createElement('button');
       btnEditar.innerText = 'Editar';
