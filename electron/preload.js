@@ -22,5 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStoreValue: (key) => ipcRenderer.invoke('getStoreValue', key),
   setStoreValue: (key, value) => ipcRenderer.invoke('setStoreValue', key, value),
 
+  // IMPORTAÇÃO DE EXCEL (opcional, se quiser processar no backend)
+  importExcel: (filePath) => ipcRenderer.invoke('importExcel', filePath),
+
   // Adicione outros métodos conforme necessário
 });

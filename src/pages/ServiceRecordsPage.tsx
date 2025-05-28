@@ -169,12 +169,12 @@ export const ServiceRecordsPage: React.FC = () => {
                     className="hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{record.orderNumber}</div>
+                      <div className="text-sm font-medium text-gray-900">{record.order_number}</div>
                       <div className="text-sm text-gray-500">{record.equipment}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{record.client}</div>
-                      <div className="text-sm text-gray-500">{record.contactPerson}</div>
+                      <div className="text-sm text-gray-500">{record.contact_person}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
@@ -183,11 +183,11 @@ export const ServiceRecordsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        record.serviceDate
+                        record.service_date
                           ? 'bg-green-100 text-green-800'
                           : 'bg-orange-100 text-orange-800'
                       }`}>
-                        {record.serviceDate ? (
+                        {record.service_date ? (
                           <>
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Concluído

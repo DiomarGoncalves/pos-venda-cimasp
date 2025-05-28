@@ -170,7 +170,7 @@ export const AttachmentsPage: React.FC = () => {
                         <div className="flex items-center">
                           <Paperclip className="h-4 w-4 text-gray-500 mr-2" />
                           <span className="text-sm text-gray-700">
-                            Atendimento: {attachment.record.orderNumber}
+                            Atendimento: {attachment.record.order_number}
                           </span>
                         </div>
                         <div className="flex items-center">

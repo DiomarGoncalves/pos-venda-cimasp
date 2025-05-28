@@ -235,7 +235,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Chassi / Placa</h3>
-                  <p className="mt-1 text-lg">{record.chassisPlate || '—'}</p>
+                  <p className="mt-1 text-lg">{record.chassis_plate || '—'}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
@@ -244,8 +244,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Data de Fabricação</h3>
                   <p className="mt-1 text-lg">
-                    {record.manufacturingDate 
-                      ? new Date(record.manufacturingDate).toLocaleDateString('pt-BR')
+                    {record.manufacturing_date
+                      ? new Date(record.manufacturing_date).toLocaleDateString('pt-BR')
                       : '—'
                     }
                   </p>
@@ -265,7 +265,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Data de Abertura</h3>
                     <p className="mt-1">
-                      {new Date(record.callOpeningDate).toLocaleDateString('pt-BR')}
+                      {new Date(record.call_opening_date).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <Tool className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Tipo de Assistência</h3>
-                    <p className="mt-1">{record.assistanceType}</p>
+                    <p className="mt-1">{record.assistance_type}</p>
                   </div>
                 </div>
                 
@@ -290,7 +290,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <MapPin className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Local da Assistência</h3>
-                    <p className="mt-1">{record.assistanceLocation || '—'}</p>
+                    <p className="mt-1">{record.assistance_location || '—'}</p>
                   </div>
                 </div>
                 
@@ -298,7 +298,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <User className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Contato</h3>
-                    <p className="mt-1">{record.contactPerson || '—'}</p>
+                    <p className="mt-1">{record.contact_person || '—'}</p>
                   </div>
                 </div>
                 
@@ -306,7 +306,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Problema Apresentado</h3>
-                    <p className="mt-1">{record.reportedIssue}</p>
+                    <p className="mt-1">{record.reported_issue}</p>
                   </div>
                 </div>
               </div>
@@ -331,8 +331,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Data do Atendimento</h3>
                     <p className="mt-1">
-                      {record.serviceDate 
-                        ? new Date(record.serviceDate).toLocaleDateString('pt-BR')
+                      {record.service_date
+                        ? new Date(record.service_date).toLocaleDateString('pt-BR')
                         : '—'
                       }
                     </p>
@@ -343,7 +343,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <User className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Técnico Responsável</h3>
-                    <p className="mt-1">{record.responsibleTechnician || '—'}</p>
+                    <p className="mt-1">{record.responsible_technician || '—'}</p>
                   </div>
                 </div>
                 
@@ -352,8 +352,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Custo Peça/Mão de Obra</h3>
                     <p className="mt-1">
-                      {record.partLaborCost
-                        ? `R$ ${record.partLaborCost.toFixed(2).replace('.', ',')}`
+                      {record.part_labor_cost
+                        ? `R$ ${record.part_labor_cost.toFixed(2).replace('.', ',')}`
                         : 'R$ 0,00'
                       }
                     </p>
@@ -365,8 +365,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Custo Viagem/Frete</h3>
                     <p className="mt-1">
-                      {record.travelFreightCost
-                        ? `R$ ${record.travelFreightCost.toFixed(2).replace('.', ',')}`
+                      {record.travel_freight_cost
+                        ? `R$ ${record.travel_freight_cost.toFixed(2).replace('.', ',')}`
                         : 'R$ 0,00'
                       }
                     </p>
@@ -377,27 +377,27 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <Clipboard className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Devolução de Peça</h3>
-                    <p className="mt-1">{record.partReturn || '—'}</p>
+                    <p className="mt-1">{record.part_return || '—'}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  {record.supplierWarranty ? (
+                  {record.supplier_warranty ? (
                     <Check className="h-5 w-5 text-green-600 mt-0.5 mr-2" />
                   ) : (
                     <X className="h-5 w-5 text-red-600 mt-0.5 mr-2" />
                   )}
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Garantia do Fornecedor</h3>
-                    <p className="mt-1">{record.supplierWarranty ? 'Sim' : 'Não'}</p>
+                    <p className="mt-1">{record.supplier_warranty ? 'Sim' : 'Não'}</p>
                   </div>
                 </div>
               </div>
-              
-              {record.technicalSolution && (
+
+              {record.technical_solution && (
                 <div className="mt-6 border-t pt-4">
                   <h3 className="text-sm font-medium text-gray-500">Solução Técnica</h3>
-                  <p className="mt-2 whitespace-pre-line">{record.technicalSolution}</p>
+                  <p className="mt-2 whitespace-pre-line">{record.technical_solution}</p>
                 </div>
               )}
             </CardContent>
@@ -412,20 +412,20 @@ export const ServiceRecordDetailPage: React.FC = () => {
             <CardContent>
               <div className="flex flex-col items-center">
                 <div className={`p-3 rounded-full ${
-                  record.serviceDate ? 'bg-green-100' : 'bg-orange-100'
+                  record.service_date ? 'bg-green-100' : 'bg-orange-100'
                 }`}>
-                  {record.serviceDate ? (
+                  {record.service_date ? (
                     <Check className="h-6 w-6 text-green-600" />
                   ) : (
                     <Clock className="h-6 w-6 text-orange-600" />
                   )}
                 </div>
                 <p className="mt-2 font-medium">
-                  {record.serviceDate ? 'Concluído' : 'Pendente'}
+                  {record.service_date ? 'Concluído' : 'Pendente'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {record.serviceDate 
-                    ? `Atendido em ${new Date(record.serviceDate).toLocaleDateString('pt-BR')}`
+                  {record.service_date
+                    ? `Atendido em ${new Date(record.service_date).toLocaleDateString('pt-BR')}`
                     : 'Aguardando atendimento'
                   }
                 </p>
@@ -450,13 +450,13 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Data de Criação</h3>
                   <p className="mt-1">
-                    {new Date(record.createdAt).toLocaleDateString('pt-BR')}
+                    {new Date(record.created_at).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Última Atualização</h3>
                   <p className="mt-1">
-                    {new Date(record.updatedAt).toLocaleDateString('pt-BR')}
+                    {new Date(record.updated_at).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
               </div>

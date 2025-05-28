@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { ServiceRecord } from '../types';
+import { createServiceRecord, getUsers } from './serviceRecordService';
 
 export const exportToExcel = async (
   records: ServiceRecord[],
@@ -47,28 +48,28 @@ export const exportToExcel = async (
   // Add data rows
   records.forEach((record) => {
     worksheet.addRow({
-      orderNumber: record.orderNumber,
+      orderNumber: record.order_number,
       equipment: record.equipment,
-      chassisPlate: record.chassisPlate,
+      chassisPlate: record.chassis_plate,
       client: record.client,
-      manufacturingDate: record.manufacturingDate,
-      callOpeningDate: record.callOpeningDate,
+      manufacturingDate: record.manufacturing_date,
+      callOpeningDate: record.call_opening_date,
       technician: record.technician,
-      assistanceType: record.assistanceType,
-      assistanceLocation: record.assistanceLocation,
-      contactPerson: record.contactPerson,
+      assistanceType: record.assistance_type,
+      assistanceLocation: record.assistance_location,
+      contactPerson: record.contact_person,
       phone: record.phone,
-      reportedIssue: record.reportedIssue,
+      reportedIssue: record.reported_issue,
       supplier: record.supplier,
       part: record.part,
       observations: record.observations,
-      serviceDate: record.serviceDate,
-      responsibleTechnician: record.responsibleTechnician,
-      partLaborCost: record.partLaborCost,
-      travelFreightCost: record.travelFreightCost,
-      partReturn: record.partReturn,
-      supplierWarranty: record.supplierWarranty ? 'SIM' : 'NÃO',
-      technicalSolution: record.technicalSolution
+      serviceDate: record.service_date,
+      responsibleTechnician: record.responsible_technician,
+      partLaborCost: record.part_labor_cost,
+      travelFreightCost: record.travel_freight_cost,
+      partReturn: record.part_return,
+      supplierWarranty: record.supplier_warranty ? 'SIM' : 'NÃO',
+      technicalSolution: record.technical_solution
     });
   });
 
@@ -107,4 +108,97 @@ export const downloadExcel = async (records: ServiceRecord[], filename: string):
   
   // Clean up
   URL.revokeObjectURL(url);
+};
+
+export const importFromExcel = async (file: File): Promise<ServiceRecord[]> => {
+  const workbook = new ExcelJS.Workbook();
+  const arrayBuffer = await file.arrayBuffer();
+  await workbook.xlsx.load(arrayBuffer);
+  const worksheet = workbook.getWorksheet('Atendimentos Técnicos');
+  if (!worksheet) throw new Error('Planilha "Atendimentos Técnicos" não encontrada.');
+
+  // Mapeamento das colunas para os campos snake_case do ServiceRecord
+  const colMap: Record<string, string> = {
+    'OF': 'order_number',
+    'EQUIPAMENTO': 'equipment',
+    'CHASSI / PLACA': 'chassis_plate',
+    'CLIENTE': 'client',
+    'DATA FABRICAÇÃO': 'manufacturing_date',
+    'DATA ABERTURA CHAMADO': 'call_opening_date',
+    'TECNICO': 'technician',
+    'TIPO ASSISTENCIA': 'assistance_type',
+    'LOCAL ASSISTÊNCIA': 'assistance_location',
+    'CONTATO': 'contact_person',
+    'TELEFONE': 'phone',
+    'PROBLEMA APRESENTADO': 'reported_issue',
+    'FORNECEDOR': 'supplier',
+    'PEÇA': 'part',
+    'OBSERVAÇÕES': 'observations',
+    'DATA ATENDIMENTO': 'service_date',
+    'TÉCNICO RESPONSÁVEL': 'responsible_technician',
+    'CUSTO PEÇA/MÃO DE OBRA': 'part_labor_cost',
+    'CUSTO VIAGEM / FRETE': 'travel_freight_cost',
+    'DEVOLUÇÃO PEÇA': 'part_return',
+    'GARANTIA FORNECEDOR': 'supplier_warranty',
+    'SOLUÇÃO TÉCNICA': 'technical_solution'
+  };
+
+  // Pega o header da primeira linha
+  const headerRow = worksheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell((cell) => headers.push(cell.text));
+
+  const importedRecords: ServiceRecord[] = [];
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return; // pula header
+
+    const rowData: any = {};
+    row.eachCell((cell, colNumber) => {
+      const header = headers[colNumber - 1];
+      const key = colMap[header];
+      if (!key) return;
+      let value = cell.value;
+
+      // Conversão de tipos
+      if (key === 'part_labor_cost' || key === 'travel_freight_cost') {
+        value = typeof value === 'number' ? value : parseFloat(value?.toString() || '0');
+      }
+      if (key === 'supplier_warranty') {
+        value = (cell.text || '').toUpperCase() === 'SIM';
+      }
+      rowData[key] = value ?? '';
+    });
+
+    importedRecords.push(rowData as ServiceRecord);
+  });
+
+  // Salva cada registro importado
+  // Busca todos os usuários para associar created_by
+  const users = await window.electronAPI.getUsers();
+
+  const savedRecords: ServiceRecord[] = [];
+  for (const rec of importedRecords) {
+    const { id, createdAt, updatedAt, created_at, updated_at, ...data } = rec as any;
+
+    // Corrigir o campo supplier_warranty para ser 0/1
+    if (typeof data.supplier_warranty === 'boolean') {
+      data.supplier_warranty = data.supplier_warranty ? 1 : 0;
+    }
+
+    // Definir created_by automaticamente com base no dia do registro (call_opening_date)
+    let createdBy = null;
+    if (data.call_opening_date) {
+      // Busca usuário criado no mesmo dia (YYYY-MM-DD)
+      const dateStr = data.call_opening_date.split('T')[0];
+      const user = users.find(u => (u.created_at || '').startsWith(dateStr));
+      if (user) {
+        createdBy = user.id;
+      }
+    }
+    data.created_by = createdBy;
+
+    const saved = await createServiceRecord(data);
+    savedRecords.push(saved);
+  }
+  return savedRecords;
 };

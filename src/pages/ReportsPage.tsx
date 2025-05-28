@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Card, 
   CardHeader, 
@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getServiceRecords } from '../services/serviceRecordService';
-import { downloadExcel } from '../services/exportService';
+import { downloadExcel, importFromExcel } from '../services/exportService';
 import { ServiceRecord } from '../types';
 import { 
   FileDown, 
@@ -26,7 +26,11 @@ export const ReportsPage: React.FC = () => {
   const [filteredRecords, setFilteredRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   // Filters
   const [dateFrom, setDateFrom] = useState('');
@@ -65,9 +69,9 @@ export const ReportsPage: React.FC = () => {
   }, []);
 
   const calculateStats = (data: ServiceRecord[]) => {
-    const pendingRecords = data.filter(r => !r.serviceDate).length;
-    const completedRecords = data.filter(r => r.serviceDate).length;
-    
+    const pendingRecords = data.filter(r => !r.service_date).length;
+    const completedRecords = data.filter(r => r.service_date).length;
+
     const totalCost = data.reduce((sum, record) => {
       return sum + (record.partLaborCost || 0) + (record.travelFreightCost || 0);
     }, 0);
@@ -88,7 +92,7 @@ export const ReportsPage: React.FC = () => {
     
     if (dateFrom) {
       filtered = filtered.filter(r => {
-        const recordDate = new Date(r.callOpeningDate);
+        const recordDate = new Date(r.call_opening_date);
         const fromDate = new Date(dateFrom);
         return recordDate >= fromDate;
       });
@@ -96,7 +100,7 @@ export const ReportsPage: React.FC = () => {
     
     if (dateTo) {
       filtered = filtered.filter(r => {
-        const recordDate = new Date(r.callOpeningDate);
+        const recordDate = new Date(r.call_opening_date);
         const toDate = new Date(dateTo);
         // Set time to end of day
         toDate.setHours(23, 59, 59, 999);
@@ -158,6 +162,29 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Arquivo selecionado para importação:', e.target.files?.[0]);
+    setImportError(null);
+    setImportSuccess(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setImporting(true);
+      const imported = await importFromExcel(file);
+      setImportSuccess(`${imported.length} registros importados com sucesso!`);
+      // Atualiza a lista
+      const data = await getServiceRecords();
+      setRecords(data);
+      setFilteredRecords(data);
+      calculateStats(data);
+    } catch (err: any) {
+      setImportError('Erro ao importar planilha: ' + (err?.message || ''));
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
   // Get unique clients and technicians for filters
   const clients = [...new Set(records.map(r => r.client))];
   const technicians = [...new Set(records.map(r => r.technician))];
@@ -175,14 +202,33 @@ export const ReportsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
         
-        <Button 
-          onClick={handleExport} 
-          isLoading={exporting}
-          disabled={filteredRecords.length === 0}
-        >
-          {!exporting && <FileDown className="mr-2 h-4 w-4" />}
-          Exportar para Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleExport} 
+            isLoading={exporting}
+            disabled={filteredRecords.length === 0}
+          >
+            {!exporting && <FileDown className="mr-2 h-4 w-4" />}
+            Exportar para Excel
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={handleImport}
+            disabled={importing}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            isLoading={importing}
+            disabled={importing}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Importar Excel
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -336,6 +382,16 @@ export const ReportsPage: React.FC = () => {
           {error}
         </div>
       )}
+      {importSuccess && (
+        <div className="p-3 bg-green-50 text-green-600 rounded-md mt-2">
+          {importSuccess}
+        </div>
+      )}
+      {importError && (
+        <div className="p-3 bg-red-50 text-red-600 rounded-md mt-2">
+          {importError}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -374,7 +430,7 @@ export const ReportsPage: React.FC = () => {
                   filteredRecords.map((record) => (
                     <tr key={record.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {record.orderNumber}
+                        {record.order_number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {record.client}
@@ -383,18 +439,18 @@ export const ReportsPage: React.FC = () => {
                         {record.equipment}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(record.callOpeningDate).toLocaleDateString('pt-BR')}
+                        {new Date(record.call_opening_date).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {record.technician}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          record.serviceDate
+                          record.service_date
                             ? 'bg-green-100 text-green-800'
                             : 'bg-orange-100 text-orange-800'
                         }`}>
-                          {record.serviceDate ? 'Concluído' : 'Pendente'}
+                          {record.service_date ? 'Concluído' : 'Pendente'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -38,13 +38,13 @@ export const DashboardPage: React.FC = () => {
   // Calculate stats
   const totalRecords = serviceRecords.length;
   const pendingRecords = serviceRecords.filter(
-    record => !record.serviceDate
+    record => !record.service_date
   ).length;
   const completedRecords = totalRecords - pendingRecords;
 
   // Get recent records
   const recentRecords = [...serviceRecords]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
   const containerVariants = {
@@ -165,7 +165,7 @@ export const DashboardPage: React.FC = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {serviceRecords.filter(r => {
-                  const date = new Date(r.createdAt);
+                  const date = new Date(r.service_date);
                   const now = new Date();
                   return date.getMonth() === now.getMonth() && 
                          date.getFullYear() === now.getFullYear();
@@ -198,20 +198,22 @@ export const DashboardPage: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="font-medium">
-                              {record.orderNumber} - {record.equipment}
+                              {(record.orderNumber || record.order_number) + ' - ' + record.equipment}
                             </h3>
                             <p className="text-sm text-gray-600">{record.client}</p>
                           </div>
                           <div className="text-right">
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              record.serviceDate 
+                            <span className={`text-xs pxflex justify-between items-start-2 py-1 rounded-full ${
+                              record.service_date 
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-orange-100 text-orange-800'
                             }`}>
-                              {record.serviceDate ? 'Concluído' : 'Pendente'}
+                              {record.service_date ? 'Concluído' : 'Pendente'}
                             </span>
                             <p className="text-xs text-gray-500 mt-1">
-                              {new Date(record.createdAt).toLocaleDateString('pt-BR')}
+                              {record.service_date
+                                ? new Date(record.service_date.replace(' ', 'T')).toLocaleDateString('pt-BR')
+                                : 'Data não informada'}
                             </p>
                           </div>
                         </div>

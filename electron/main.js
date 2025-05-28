@@ -4,6 +4,7 @@ const Database = require('better-sqlite3');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const ExcelJS = require('exceljs'); // Adicione no topo se for usar
 
 // Get directory name using ESM pattern
 // const __dirname = __dirname || require('path').dirname(require.main.filename);
@@ -246,6 +247,86 @@ app.whenReady().then(() => {
     config[key] = value;
     writeConfigFile(config);
     return true;
+  });
+
+  // Adicione este handler se quiser importar Excel no backend
+  ipcMain.handle('importExcel', async (event, filePath) => {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
+    const worksheet = workbook.getWorksheet('Atendimentos Técnicos');
+    if (!worksheet) throw new Error('Planilha "Atendimentos Técnicos" não encontrada.');
+
+    const colMap = {
+      'OF': 'order_number',
+      'EQUIPAMENTO': 'equipment',
+      'CHASSI / PLACA': 'chassis_plate',
+      'CLIENTE': 'client',
+      'DATA FABRICAÇÃO': 'manufacturing_date',
+      'DATA ABERTURA CHAMADO': 'call_opening_date',
+      'TECNICO': 'technician',
+      'TIPO ASSISTENCIA': 'assistance_type',
+      'LOCAL ASSISTÊNCIA': 'assistance_location',
+      'CONTATO': 'contact_person',
+      'TELEFONE': 'phone',
+      'PROBLEMA APRESENTADO': 'reported_issue',
+      'FORNECEDOR': 'supplier',
+      'PEÇA': 'part',
+      'OBSERVAÇÕES': 'observations',
+      'DATA ATENDIMENTO': 'service_date',
+      'TÉCNICO RESPONSÁVEL': 'responsible_technician',
+      'CUSTO PEÇA/MÃO DE OBRA': 'part_labor_cost',
+      'CUSTO VIAGEM / FRETE': 'travel_freight_cost',
+      'DEVOLUÇÃO PEÇA': 'part_return',
+      'GARANTIA FORNECEDOR': 'supplier_warranty',
+      'SOLUÇÃO TÉCNICA': 'technical_solution'
+    };
+
+    const headerRow = worksheet.getRow(1);
+    const headers = [];
+    headerRow.eachCell(cell => headers.push(cell.text));
+
+    const importedRecords = [];
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const rowData = {};
+      row.eachCell((cell, colNumber) => {
+        const header = headers[colNumber - 1];
+        const key = colMap[header];
+        if (!key) return;
+        let value = cell.value;
+        if (key === 'part_labor_cost' || key === 'travel_freight_cost') {
+          value = typeof value === 'number' ? value : parseFloat(value?.toString() || '0');
+        }
+        if (key === 'supplier_warranty') {
+          value = (cell.text || '').toUpperCase() === 'SIM' ? 1 : 0;
+        }
+        rowData[key] = value ?? '';
+      });
+      importedRecords.push(rowData);
+    });
+
+    // Salva cada registro importado
+    const stmt = db.prepare(`
+      INSERT INTO service_records (
+        id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
+        technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
+        supplier, part, observations, service_date, responsible_technician, part_labor_cost,
+        travel_freight_cost, part_return, supplier_warranty, technical_solution
+      ) VALUES (
+        @id, @order_number, @equipment, @chassis_plate, @client, @manufacturing_date, @call_opening_date,
+        @technician, @assistance_type, @assistance_location, @contact_person, @phone, @reported_issue,
+        @supplier, @part, @observations, @service_date, @responsible_technician, @part_labor_cost,
+        @travel_freight_cost, @part_return, @supplier_warranty, @technical_solution
+      )
+    `);
+
+    const saved = [];
+    for (const rec of importedRecords) {
+      const id = uuidv4();
+      stmt.run({ id, ...rec });
+      saved.push({ id, ...rec });
+    }
+    return saved;
   });
 
   // Adicione outros handlers conforme necessário (update, delete, etc)
