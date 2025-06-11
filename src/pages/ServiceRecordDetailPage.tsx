@@ -12,9 +12,9 @@ import {
   getServiceRecordById, 
   deleteServiceRecord 
 } from '../services/serviceRecordService';
-import { openAttachment, getAttachments, deleteAttachment } from '../services/attachmentService';
+import { downloadAttachment, getAttachments, deleteAttachment } from '../services/attachmentService';
 import { ServiceRecord, Attachment } from '../types';
-import { ChevronLeft, Edit, Trash2, FileIcon, Download, Calendar, User, MapPin, PenTool as Tool, DollarSign, Clipboard, Check, X, AlertCircle, Clock } from 'lucide-react';
+import { ChevronLeft, Edit, Trash2, FileIcon, Download, Calendar, User, MapPin, PenTool as Tool, DollarSign, Clipboard, Check, X, AlertCircle, Clock, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const ServiceRecordDetailPage: React.FC = () => {
@@ -96,6 +96,49 @@ export const ServiceRecordDetailPage: React.FC = () => {
       setAttachmentError('Erro ao excluir o anexo');
     } finally {
       setAttachmentToDelete(null);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentId: string, filename: string) => {
+    try {
+      // Chama o IPC para buscar o buffer do anexo
+      const result = await window.electronAPI.getAttachmentFile(attachmentId);
+      if (result && result.buffer) {
+        // Cria um blob e faz o download
+        const blob = new Blob([new Uint8Array(result.buffer)], { type: result.mimetype || 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert('Arquivo não encontrado.');
+      }
+    } catch (error) {
+      console.error('Erro ao baixar anexo:', error);
+      alert('Erro ao baixar anexo.');
+    }
+  };
+
+  // Função para visualizar anexo diretamente
+  const handleViewAttachment = async (attachmentId: string, filename: string) => {
+    try {
+      // @ts-ignore
+      const result = await window.electronAPI.getAttachmentFile(attachmentId);
+      if (result && result.buffer) {
+        const blob = new Blob([new Uint8Array(result.buffer)], { type: result.mimetype || 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Opcional: window.URL.revokeObjectURL(url) pode ser chamado depois, mas só após o usuário fechar a aba
+      } else {
+        alert('Arquivo não encontrado.');
+      }
+    } catch (error) {
+      console.error('Erro ao visualizar anexo:', error);
+      alert('Erro ao visualizar anexo.');
     }
   };
 
@@ -480,7 +523,16 @@ export const ServiceRecordDetailPage: React.FC = () => {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => openAttachment(attachment.url)}
+                          onClick={() => handleViewAttachment(attachment.id, attachment.filename)}
+                          title="Visualizar"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => downloadAttachment(attachment.id, attachment.filename)}
+                          title="Baixar"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -489,6 +541,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                           size="sm"
                           onClick={() => setAttachmentToDelete(attachment.id)}
                           className="text-red-600"
+                          title="Excluir"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

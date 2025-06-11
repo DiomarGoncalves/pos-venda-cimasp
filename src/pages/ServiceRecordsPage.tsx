@@ -178,7 +178,7 @@ export const ServiceRecordsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(record.callOpeningDate).toLocaleDateString('pt-BR')}
+                        {new Date(record.call_opening_date).toLocaleDateString('pt-BR')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

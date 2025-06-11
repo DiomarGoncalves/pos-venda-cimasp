@@ -7,13 +7,16 @@ export const uploadAttachment = async (
 ): Promise<Attachment | null> => {
   try {
     const fileId = uuidv4();
-    const filename = `${fileId}-${file.name}`;
     const arrayBuffer = await file.arrayBuffer();
 
-    // Salva o arquivo fisicamente
-    const filePath = await window.electronAPI.saveAttachmentFile({
-      buffer: Array.from(new Uint8Array(arrayBuffer)),
-      filename,
+    // Salva no banco via IPC, incluindo o buffer do arquivo
+    await window.electronAPI.addAttachment({
+      service_record_id: serviceRecordId,
+      filename: file.name,
+      mimetype: file.type,
+      size: file.size,
+      uploaded_by: null, // ajuste conforme necessário
+      buffer: Array.from(new Uint8Array(arrayBuffer)), // envia o conteúdo do arquivo
     });
 
     const newAttachment: Attachment = {
@@ -22,19 +25,9 @@ export const uploadAttachment = async (
       filename: file.name,
       fileType: file.type,
       fileSize: file.size,
-      url: filePath, // Caminho real do arquivo
+      url: '', // não há url local, pode ser preenchido com id ou vazio
       createdAt: new Date().toISOString(),
     };
-
-    // Salva no banco via IPC
-    await window.electronAPI.addAttachment({
-      service_record_id: serviceRecordId,
-      filename: file.name,
-      url: filePath,
-      mimetype: file.type,
-      size: file.size,
-      uploaded_by: null, // ajuste conforme necessário
-    });
 
     return newAttachment;
   } catch (error) {
@@ -63,11 +56,38 @@ export const deleteAttachment = async (id: string): Promise<boolean> => {
   }
 };
 
-// Para abrir o anexo:
-export const openAttachment = async (filePath: string) => {
+// Para abrir o anexo online:
+export const openAttachment = async (url: string) => {
   try {
-    await window.electronAPI.openAttachmentFile(filePath);
+    if (!url) {
+      console.error('Open attachment error: url está indefinido ou vazio');
+      return;
+    }
+    window.open(url, '_blank');
   } catch (error) {
     console.error('Open attachment error:', error);
+  }
+};
+
+export const downloadAttachment = async (attachmentId: string, filename: string) => {
+  try {
+    // @ts-ignore
+    const result = await window.electronAPI.getAttachmentFile(attachmentId);
+    if (result && result.buffer) {
+      const blob = new Blob([new Uint8Array(result.buffer)], { type: result.mimetype || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      alert('Arquivo não encontrado.');
+    }
+  } catch (error) {
+    console.error('Erro ao baixar anexo:', error);
+    alert('Erro ao baixar anexo.');
   }
 };

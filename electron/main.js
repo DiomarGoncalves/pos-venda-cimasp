@@ -1,89 +1,117 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const { join } = require('path');
-const Database = require('better-sqlite3');
+// Remover: const Database = require('better-sqlite3');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
-const ExcelJS = require('exceljs'); // Adicione no topo se for usar
+const ExcelJS = require('exceljs');
 
-// Get directory name using ESM pattern
-// const __dirname = __dirname || require('path').dirname(require.main.filename);
+// Adicione o pacote pg para PostgreSQL
+const { Pool } = require('pg');
 
-// Altere o caminho do banco de dados para o compartilhamento de rede
-// const dbPath = path.join(__dirname, 'userData', 'database.sqlite');
-const dbPath = '\\\\192.168.1.2\\publica\\POS-VENDAS\\sistema\\banco de dados sistema novo\\sistema.db';
+const configFilePath = path.join(app.getPath('userData'), 'app-config.json');
 
-// Garante que o diretório existe antes de abrir o banco
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+function readConfigFile() {
+  try {
+    if (fs.existsSync(configFilePath)) {
+      return JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
+    }
+    return {};
+  } catch {
+    return {};
+  }
 }
 
-const db = new Database(dbPath);
+// --- NOVO: função para obter a connection string do banco ---
+function getDatabaseUrl() {
+  // 1. Prioriza variável de ambiente
+  if (process.env.NEON_DATABASE_URL) return process.env.NEON_DATABASE_URL;
+  // 2. Busca no arquivo de config
+  const config = readConfigFile();
+  if (config.NEON_DATABASE_URL) return config.NEON_DATABASE_URL;
+  // 3. Valor padrão (se quiser)
+  return 'postgresql://Sistema%20Controle%20Pos-venda%20Cimasp_owner:npg_LRdC2QzpgU8i@ep-billowing-block-acttwjcg-pooler.sa-east-1.aws.neon.tech/Sistema%20Controle%20Pos-venda%20Cimasp?sslmode=require';
+}
 
-// Cria as tabelas se não existirem
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS service_records (
-  id TEXT PRIMARY KEY,
-  order_number TEXT NOT NULL,
-  equipment TEXT NOT NULL,
-  chassis_plate TEXT,
-  client TEXT NOT NULL,
-  manufacturing_date TEXT,
-  call_opening_date TEXT NOT NULL,
-  technician TEXT NOT NULL,
-  assistance_type TEXT NOT NULL,
-  assistance_location TEXT,
-  contact_person TEXT,
-  phone TEXT,
-  reported_issue TEXT NOT NULL,
-  supplier TEXT,
-  part TEXT,
-  observations TEXT,
-  service_date TEXT,
-  responsible_technician TEXT,
-  part_labor_cost REAL DEFAULT 0,
-  travel_freight_cost REAL DEFAULT 0,
-  part_return TEXT,
-  supplier_warranty INTEGER DEFAULT 0,
-  technical_solution TEXT,
-  created_by TEXT REFERENCES users(id),
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS attachments (
-  id TEXT PRIMARY KEY,
-  service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
-  filename TEXT NOT NULL,
-  url TEXT NOT NULL,
-  mimetype TEXT,
-  size INTEGER,
-  uploaded_by TEXT REFERENCES users(id),
-  created_at TEXT DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS service_record_history (
-  id TEXT PRIMARY KEY,
-  service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
-  changed_by TEXT REFERENCES users(id),
-  change_type TEXT,
-  change_data TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_service_records_client ON service_records(client);
-CREATE INDEX IF NOT EXISTS idx_service_records_technician ON service_records(technician);
-CREATE INDEX IF NOT EXISTS idx_attachments_service_record_id ON attachments(service_record_id);
-`);
+// Configuração da conexão com o banco Neon PostgreSQL
+const pool = new Pool({
+  connectionString: getDatabaseUrl(),
+  ssl: { rejectUnauthorized: false }
+});
 
-// Altere o diretório de anexos para o compartilhamento de rede
-const attachmentsDir = '\\\\192.168.1.2\\publica\\POS-VENDAS\\sistema\\anexos';
-if (!fs.existsSync(attachmentsDir)) {
-  fs.mkdirSync(attachmentsDir, { recursive: true });
+// Função para criar tabelas se não existirem (executada uma vez)
+async function ensureTables() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS service_records (
+      id TEXT PRIMARY KEY,
+      order_number TEXT NOT NULL,
+      equipment TEXT NOT NULL,
+      chassis_plate TEXT,
+      client TEXT NOT NULL,
+      manufacturing_date TEXT,
+      call_opening_date TEXT NOT NULL,
+      technician TEXT NOT NULL,
+      assistance_type TEXT NOT NULL,
+      assistance_location TEXT,
+      contact_person TEXT,
+      phone TEXT,
+      reported_issue TEXT NOT NULL,
+      supplier TEXT,
+      part TEXT,
+      observations TEXT,
+      service_date TEXT,
+      responsible_technician TEXT,
+      part_labor_cost REAL DEFAULT 0,
+      travel_freight_cost REAL DEFAULT 0,
+      part_return TEXT,
+      supplier_warranty INTEGER DEFAULT 0,
+      technical_solution TEXT,
+      created_by TEXT REFERENCES users(id),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS attachments (
+      id TEXT PRIMARY KEY,
+      service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL,
+      url TEXT,
+      mimetype TEXT,
+      size INTEGER,
+      uploaded_by TEXT REFERENCES users(id),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS service_record_history (
+      id TEXT PRIMARY KEY,
+      service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
+      changed_by TEXT REFERENCES users(id),
+      change_type TEXT,
+      change_data TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_service_records_client ON service_records(client);
+    CREATE INDEX IF NOT EXISTS idx_service_records_technician ON service_records(technician);
+    CREATE INDEX IF NOT EXISTS idx_attachments_service_record_id ON attachments(service_record_id);
+  `);
+
+  // Garante que a coluna file_data existe em attachments
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='attachments' AND column_name='file_data'
+      ) THEN
+        ALTER TABLE attachments ADD COLUMN file_data BYTEA;
+      END IF;
+    END
+    $$;
+  `);
 }
 
 // Global reference to main window
@@ -114,24 +142,12 @@ function createWindow() {
   });
 }
 
-const configFilePath = path.join(app.getPath('userData'), 'app-config.json');
-
-function readConfigFile() {
-  try {
-    if (fs.existsSync(configFilePath)) {
-      return JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
-    }
-    return {};
-  } catch {
-    return {};
-  }
-}
-
 function writeConfigFile(config) {
   fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await ensureTables();
   createWindow();
 
   app.on('activate', () => {
@@ -139,102 +155,128 @@ app.whenReady().then(() => {
   });
 
   // IPC handlers para USERS
-  ipcMain.handle('getUsers', () => {
-    console.log('[IPC] getUsers chamado');
-    return db.prepare('SELECT * FROM users').all();
+  ipcMain.handle('getUsers', async () => {
+    const { rows } = await pool.query('SELECT * FROM users');
+    return rows;
   });
 
-  ipcMain.handle('addUser', (event, user) => {
-    console.log('[IPC] addUser chamado:', user);
+  ipcMain.handle('addUser', async (event, user) => {
     const id = uuidv4();
-    // Remova o campo name do insert se não existir na tabela
-    db.prepare('INSERT INTO users (id, username, password) VALUES (?, ?, ?)')
-      .run(id, user.username, user.password);
-    const allUsers = db.prepare('SELECT * FROM users').all();
-    console.log('[IPC] Usuários após insert:', allUsers);
+    await pool.query(
+      'INSERT INTO users (id, username, password) VALUES ($1, $2, $3)',
+      [id, user.username, user.password]
+    );
     return { id, ...user };
   });
 
   // IPC handlers para SERVICE RECORDS
-  ipcMain.handle('getServiceRecords', () => {
-    return db.prepare('SELECT * FROM service_records').all();
+  ipcMain.handle('getServiceRecords', async () => {
+    const { rows } = await pool.query('SELECT * FROM service_records');
+    return rows;
   });
 
-  ipcMain.handle('addServiceRecord', (event, record) => {
+  ipcMain.handle('addServiceRecord', async (event, record) => {
     const id = uuidv4();
-    db.prepare(`
+    // Garante que created_by seja null se não enviado
+    const createdBy = record.created_by || null;
+    await pool.query(`
       INSERT INTO service_records (
         id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
         technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
         supplier, part, observations, service_date, responsible_technician, part_labor_cost,
         travel_freight_cost, part_return, supplier_warranty, technical_solution, created_by
       ) VALUES (
-        @id, @order_number, @equipment, @chassis_plate, @client, @manufacturing_date, @call_opening_date,
-        @technician, @assistance_type, @assistance_location, @contact_person, @phone, @reported_issue,
-        @supplier, @part, @observations, @service_date, @responsible_technician, @part_labor_cost,
-        @travel_freight_cost, @part_return, @supplier_warranty, @technical_solution, @created_by
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
       )
-    `).run({ id, ...record });
-    return { id, ...record };
+    `, [
+      id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manfacturing_date,
+      record.call_opening_date, record.technician, record.assistance_type, record.assistance_location,
+      record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
+      record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
+      record.travel_freight_cost, record.part_return, record.supplier_warranty, record.technical_solution,
+      createdBy
+    ]);
+    return { id, ...record, created_by: createdBy };
   });
 
-  ipcMain.handle('deleteServiceRecord', (event, id) => {
-    db.prepare('DELETE FROM service_records WHERE id = ?').run(id);
+  ipcMain.handle('deleteServiceRecord', async (event, id) => {
+    await pool.query('DELETE FROM service_records WHERE id = $1', [id]);
     return true;
   });
 
-  ipcMain.handle('updateServiceRecord', (event, id, updated) => {
-    // Lista de campos válidos na tabela service_records
+  ipcMain.handle('updateServiceRecord', async (event, id, updated) => {
     const validFields = [
       'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
       'call_opening_date', 'technician', 'assistance_type', 'assistance_location',
       'contact_person', 'phone', 'reported_issue', 'supplier', 'part', 'observations',
       'service_date', 'responsible_technician', 'part_labor_cost', 'travel_freight_cost',
-      'part_return', 'supplier_warranty', 'technical_solution', 'created_by',
+      'part_return', 'supplier_warranty', 'technical_solution',
+      // Remover 'created_by' daqui
       'created_at', 'updated_at'
     ];
-    // Filtra apenas os campos válidos
     const fields = Object.keys(updated).filter(
       k => k !== 'id' && validFields.includes(k)
     );
     if (fields.length === 0) return false;
-    const setClause = fields.map(field => `${field} = @${field}`).join(', ');
-    const stmt = db.prepare(`UPDATE service_records SET ${setClause} WHERE id = @id`);
-    stmt.run({ ...updated, id });
+    const setClause = fields.map((field, idx) => `${field} = $${idx + 1}`).join(', ');
+    const values = fields.map(f => updated[f]);
+    values.push(id);
+    await pool.query(
+      `UPDATE service_records SET ${setClause} WHERE id = $${fields.length + 1}`,
+      values
+    );
     return true;
   });
 
   // IPC handlers para ATTACHMENTS
-  ipcMain.handle('getAttachments', (event, service_record_id) => {
-    return db.prepare('SELECT * FROM attachments WHERE service_record_id = ?').all(service_record_id);
+  ipcMain.handle('getAttachments', async (event, service_record_id) => {
+    const { rows } = await pool.query(
+      'SELECT * FROM attachments WHERE service_record_id = $1',
+      [service_record_id]
+    );
+    return rows;
   });
 
-  ipcMain.handle('addAttachment', (event, attachment) => {
+  ipcMain.handle('addAttachment', async (event, attachment) => {
     const id = uuidv4();
-    db.prepare(`
+    // O buffer chega como array, converta para Buffer
+    const fileData = attachment.buffer ? Buffer.from(attachment.buffer) : null;
+    await pool.query(`
       INSERT INTO attachments (
-        id, service_record_id, filename, url, mimetype, size, uploaded_by
+        id, service_record_id, filename, url, mimetype, size, uploaded_by, file_data
       ) VALUES (
-        @id, @service_record_id, @filename, @url, @mimetype, @size, @uploaded_by
+        $1, $2, $3, $4, $5, $6, $7, $8
       )
-    `).run({ id, ...attachment });
+    `, [
+      id,
+      attachment.service_record_id,
+      attachment.filename,
+      '', // url não é mais usada
+      attachment.mimetype,
+      attachment.size,
+      attachment.uploaded_by,
+      fileData
+    ]);
     return { id, ...attachment };
   });
 
-  ipcMain.handle('deleteAttachment', (event, id) => {
-    db.prepare('DELETE FROM attachments WHERE id = ?').run(id);
+  ipcMain.handle('deleteAttachment', async (event, id) => {
+    await pool.query('DELETE FROM attachments WHERE id = $1', [id]);
     return true;
   });
 
-  ipcMain.handle('saveAttachmentFile', async (event, { buffer, filename }) => {
-    const filePath = join(attachmentsDir, filename); // Corrigido para usar o import ES
-    fs.writeFileSync(filePath, Buffer.from(buffer));
-    return filePath;
-  });
-
-  ipcMain.handle('openAttachmentFile', async (event, filePath) => {
-    await shell.openPath(filePath);
-    return true;
+  // Novo handler para baixar o arquivo do anexo
+  ipcMain.handle('getAttachmentFile', async (event, attachmentId) => {
+    const { rows } = await pool.query(
+      'SELECT file_data, mimetype, filename FROM attachments WHERE id = $1',
+      [attachmentId]
+    );
+    if (rows.length === 0) return null;
+    return {
+      buffer: rows[0].file_data,
+      mimetype: rows[0].mimetype,
+      filename: rows[0].filename
+    };
   });
 
   ipcMain.handle('getStoreValue', (event, key) => {
@@ -249,7 +291,7 @@ app.whenReady().then(() => {
     return true;
   });
 
-  // Adicione este handler se quiser importar Excel no backend
+  // Handler para importar Excel para o banco Neon
   ipcMain.handle('importExcel', async (event, filePath) => {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(filePath);
@@ -298,38 +340,52 @@ app.whenReady().then(() => {
           value = typeof value === 'number' ? value : parseFloat(value?.toString() || '0');
         }
         if (key === 'supplier_warranty') {
-          value = (cell.text || '').toUpperCase() === 'SIM' ? 1 : 0;
+          value = (cell.text || '').toString().toUpperCase() === 'SIM' ? 1 : 0;
+        }
+        // Garante que value é string para campos de texto
+        if (
+          [
+            'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
+            'call_opening_date', 'technician', 'assistance_type', 'assistance_location',
+            'contact_person', 'phone', 'reported_issue', 'supplier', 'part', 'observations',
+            'service_date', 'responsible_technician', 'part_return', 'technical_solution'
+          ].includes(key)
+        ) {
+          value = value == null ? '' : value.toString();
         }
         rowData[key] = value ?? '';
       });
+      // Garante que todos os campos obrigatórios existem e são string
+      rowData.created_at = '';
+      rowData.updated_at = '';
       importedRecords.push(rowData);
     });
-
-    // Salva cada registro importado
-    const stmt = db.prepare(`
-      INSERT INTO service_records (
-        id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
-        technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
-        supplier, part, observations, service_date, responsible_technician, part_labor_cost,
-        travel_freight_cost, part_return, supplier_warranty, technical_solution
-      ) VALUES (
-        @id, @order_number, @equipment, @chassis_plate, @client, @manufacturing_date, @call_opening_date,
-        @technician, @assistance_type, @assistance_location, @contact_person, @phone, @reported_issue,
-        @supplier, @part, @observations, @service_date, @responsible_technician, @part_labor_cost,
-        @travel_freight_cost, @part_return, @supplier_warranty, @technical_solution
-      )
-    `);
 
     const saved = [];
     for (const rec of importedRecords) {
       const id = uuidv4();
-      stmt.run({ id, ...rec });
+      await pool.query(`
+        INSERT INTO service_records (
+          id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
+          technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
+          supplier, part, observations, service_date, responsible_technician, part_labor_cost,
+          travel_freight_cost, part_return, supplier_warranty, technical_solution
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+        )
+      `, [
+        id, rec.order_number, rec.equipment, rec.chassis_plate, rec.client, rec.manufacturing_date,
+        rec.call_opening_date, rec.technician, rec.assistance_type, rec.assistance_location,
+        rec.contact_person, rec.phone, rec.reported_issue, rec.supplier, rec.part,
+        rec.observations, rec.service_date, rec.responsible_technician, rec.part_labor_cost,
+        rec.travel_freight_cost, rec.part_return, rec.supplier_warranty, rec.technical_solution
+      ]);
       saved.push({ id, ...rec });
     }
     return saved;
   });
 
-  // Adicione outros handlers conforme necessário (update, delete, etc)
+  // ...existing code...
 });
 
 app.on('window-all-closed', () => {

@@ -98,29 +98,31 @@ export const ServiceRecordFormPage: React.FC = () => {
     try {
       setLoading(true);
       setSaveError(null);
-      
+
       let savedRecord: ServiceRecord | null;
-      
+
       if (isEditing && id) {
-        savedRecord = await updateServiceRecord(id, data);
+        // Remover createdBy do update
+        const { createdBy, ...updateData } = data;
+        savedRecord = await updateServiceRecord(id, updateData as ServiceRecord);
       } else {
         savedRecord = await createServiceRecord({
           ...data,
           createdBy: user?.id || '',
         });
       }
-      
+
       if (!savedRecord) {
         throw new Error('Failed to save service record');
       }
-      
+
       // Upload attachments if any
       if (selectedFiles.length > 0 && savedRecord.id) {
         await Promise.all(
           selectedFiles.map(file => uploadAttachment(savedRecord!.id, file))
         );
       }
-      
+
       navigate(`/service-records/${savedRecord.id}`);
     } catch (error) {
       console.error('Error saving service record:', error);
@@ -357,9 +359,10 @@ export const ServiceRecordFormPage: React.FC = () => {
             <CardContent>
               <FileUpload
                 onFilesSelected={handleFilesSelected}
-                label="Adicionar arquivos (PDF, imagens, documentos)"
+                label="Adicionar arquivos (PDF, imagens, vídeos, documentos)"
                 accept={{
                   'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+                  'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm'],
                   'application/pdf': ['.pdf'],
                   'application/msword': ['.doc'],
                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],

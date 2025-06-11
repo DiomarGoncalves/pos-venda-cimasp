@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteAttachment: (id) => ipcRenderer.invoke('deleteAttachment', id),
   saveAttachmentFile: (data) => ipcRenderer.invoke('saveAttachmentFile', data),
   openAttachmentFile: (filePath) => ipcRenderer.invoke('openAttachmentFile', filePath),
+  getAttachmentFile: (attachmentId) => ipcRenderer.invoke('getAttachmentFile', attachmentId),
 
   // SETTINGS
   getStoreValue: (key) => ipcRenderer.invoke('getStoreValue', key),

@@ -49,11 +49,18 @@ export const ReportsPage: React.FC = () => {
     averageCost: 0,
   });
 
+  // Altere o carregamento inicial para ordenar por data de abertura (mais recente primeiro)
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const data = await getServiceRecords();
+        let data = await getServiceRecords();
+        // Ordena por call_opening_date decrescente (mais recente primeiro)
+        data = data.sort((a, b) => {
+          const dateA = new Date(a.call_opening_date).getTime();
+          const dateB = new Date(b.call_opening_date).getTime();
+          return dateB - dateA;
+        });
         setRecords(data);
         setFilteredRecords(data);
         calculateStats(data);
@@ -73,7 +80,7 @@ export const ReportsPage: React.FC = () => {
     const completedRecords = data.filter(r => r.service_date).length;
 
     const totalCost = data.reduce((sum, record) => {
-      return sum + (record.partLaborCost || 0) + (record.travelFreightCost || 0);
+      return sum + (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
     }, 0);
     
     const averageCost = data.length > 0 ? totalCost / data.length : 0;
@@ -132,6 +139,12 @@ export const ReportsPage: React.FC = () => {
       }
     }
     
+    // Ordena novamente após filtrar
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.call_opening_date).getTime();
+      const dateB = new Date(b.call_opening_date).getTime();
+      return dateB - dateA;
+    });
     setFilteredRecords(filtered);
     calculateStats(filtered);
   };
@@ -454,7 +467,7 @@ export const ReportsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        R$ {((record.partLaborCost || 0) + (record.travelFreightCost || 0)).toFixed(2).replace('.', ',')}
+                        R$ {((record.part_labor_cost || 0) + (record.travel_freight_cost || 0)).toFixed(2).replace('.', ',')}
                       </td>
                     </tr>
                   ))

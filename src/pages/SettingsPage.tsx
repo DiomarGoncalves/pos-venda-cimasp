@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -27,12 +27,21 @@ export const SettingsPage: React.FC = () => {
   // Teste de conexão/caminhos
   const [testResult, setTestResult] = useState<string | null>(null);
 
+  // Nova variável de ambiente para conexão do banco de dados
+  const [dbUrl, setDbUrl] = useState('');
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const savedConfig = await window.electronAPI.getStoreValue('apiConfig');
         if (savedConfig) {
           setConfig(savedConfig);
+        }
+
+        // Carrega valor salvo da nova variável de ambiente
+        const savedDbUrl = await window.electronAPI.getStoreValue('NEON_DATABASE_URL');
+        if (savedDbUrl) {
+          setDbUrl(savedDbUrl);
         }
       } catch (error) {
         setSaveError('Erro ao carregar configuração');
@@ -100,6 +109,21 @@ export const SettingsPage: React.FC = () => {
       }
     } catch (err) {
       setResetError('Erro ao redefinir senha.');
+    }
+  };
+
+  // Salva a nova variável de ambiente
+  const handleSaveDbUrl = async () => {
+    setLoading(true);
+    try {
+      await window.electronAPI.setStoreValue('NEON_DATABASE_URL', dbUrl);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      setSaveError('Erro ao salvar configuração da variável de ambiente');
+      console.error('Error saving DB URL configuration:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,6 +258,25 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações do Banco de Dados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <label className="block mb-2 font-medium">String de conexão do banco (PostgreSQL/Neon):</label>
+          <Input
+            value={dbUrl}
+            onChange={e => setDbUrl(e.target.value)}
+            placeholder="postgresql://usuario:senha@host:porta/banco?sslmode=require"
+          />
+          <Button className="mt-4" onClick={handleSaveDbUrl} isLoading={loading}>
+            Salvar
+          </Button>
+          {saveSuccess && <div className="mt-2 text-green-600">Configuração salva!</div>}
+          {saveError && <div className="mt-2 text-red-600">{saveError}</div>}
         </CardContent>
       </Card>
     </div>

@@ -190,7 +190,10 @@ export const importFromExcel = async (file: File): Promise<ServiceRecord[]> => {
     if (data.call_opening_date) {
       // Busca usuário criado no mesmo dia (YYYY-MM-DD)
       const dateStr = data.call_opening_date.split('T')[0];
-      const user = users.find(u => (u.created_at || '').startsWith(dateStr));
+      const user = users.find(u => {
+        const createdAtStr = typeof u.created_at === 'string' ? u.created_at : '';
+        return createdAtStr.startsWith(dateStr);
+      });
       if (user) {
         createdBy = user.id;
       }
