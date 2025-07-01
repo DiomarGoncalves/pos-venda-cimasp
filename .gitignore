@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.exe
 
 out/
-Output
-.exe
+Output/mysetup.exe

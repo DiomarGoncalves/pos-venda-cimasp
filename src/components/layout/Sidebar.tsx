@@ -77,8 +77,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobile, isOpen, onToggle }) 
       <div className="p-4 border-t">
         {user && (
           <div className="mb-4 px-3 py-2">
-            <p className="text-sm font-medium text-gray-900">{user.name || user.email}</p>
-            <p className="text-xs text-gray-500">{user.role}</p>
+            <p className="text-sm font-medium text-gray-900">Desenvolvido por:</p>
+            <p className="text-xs text-gray-500">Diomar Gonçalves / alphadevss</p>
           </div>
         )}
         <Button 

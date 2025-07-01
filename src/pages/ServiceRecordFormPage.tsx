@@ -43,14 +43,18 @@ export const ServiceRecordFormPage: React.FC = () => {
           const record = await getServiceRecordById(id);
 
           if (record) {
-            // Mapeia campos snake_case para camelCase para o formulário
+            // Ajusta manufacturingDate para formato YYYY-MM-DD
+            let manufacturingDate = record.manufacturingDate ?? record.manufacturing_date ?? '';
+            if (manufacturingDate && manufacturingDate.length > 10) {
+              manufacturingDate = manufacturingDate.slice(0, 10);
+            }
             reset({
               id: record.id,
               orderNumber: record.orderNumber ?? record.order_number ?? '',
               equipment: record.equipment ?? '',
               chassisPlate: record.chassisPlate ?? record.chassis_plate ?? '',
               client: record.client ?? '',
-              manufacturingDate: record.manufacturingDate ?? record.manufacturing_date ?? '',
+              manufacturingDate,
               callOpeningDate: record.callOpeningDate ?? record.call_opening_date ?? '',
               technician: record.technician ?? '',
               assistanceType: record.assistanceType ?? record.assistance_type ?? '',
@@ -90,6 +94,7 @@ export const ServiceRecordFormPage: React.FC = () => {
         callOpeningDate: new Date().toISOString().split('T')[0],
         technician: user?.name || '',
         createdBy: user?.id || '',
+        manufacturingDate: '', // Garante campo vazio
       } as any);
     }
   }, [id, navigate, reset, setValue, user]);
@@ -99,16 +104,25 @@ export const ServiceRecordFormPage: React.FC = () => {
       setLoading(true);
       setSaveError(null);
 
+      // Garante que manufacturingDate está no formato YYYY-MM-DD ou vazio
+      let manufacturingDate = data.manufacturingDate || '';
+      if (manufacturingDate && manufacturingDate.length > 10) {
+        manufacturingDate = manufacturingDate.slice(0, 10);
+      }
+
       let savedRecord: ServiceRecord | null;
 
       if (isEditing && id) {
-        // Remover createdBy do update
         const { createdBy, ...updateData } = data;
-        savedRecord = await updateServiceRecord(id, updateData as ServiceRecord);
+        savedRecord = await updateServiceRecord(id, {
+          ...updateData,
+          manufacturingDate,
+        } as ServiceRecord);
       } else {
         savedRecord = await createServiceRecord({
           ...data,
           createdBy: user?.id || '',
+          manufacturingDate,
         });
       }
 

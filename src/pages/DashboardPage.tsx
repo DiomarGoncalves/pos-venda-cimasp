@@ -22,7 +22,13 @@ export const DashboardPage: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const records = await getServiceRecords();
+        let records = await getServiceRecords();
+        // Ordena por call_opening_date decrescente (mais recente primeiro)
+        records = records.sort((a, b) => {
+          const dateA = new Date(a.call_opening_date).getTime();
+          const dateB = new Date(b.call_opening_date).getTime();
+          return dateB - dateA;
+        });
         setServiceRecords(records);
       } catch (err) {
         console.error('Error loading service records:', err);
@@ -44,7 +50,11 @@ export const DashboardPage: React.FC = () => {
 
   // Get recent records
   const recentRecords = [...serviceRecords]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      const dateA = new Date(a.call_opening_date).getTime();
+      const dateB = new Date(b.call_opening_date).getTime();
+      return dateB - dateA;
+    })
     .slice(0, 5);
 
   const containerVariants = {

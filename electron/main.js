@@ -30,7 +30,7 @@ function getDatabaseUrl() {
   const config = readConfigFile();
   if (config.NEON_DATABASE_URL) return config.NEON_DATABASE_URL;
   // 3. Valor padrão (se quiser)
-  return 'postgresql://Sistema%20Controle%20Pos-venda%20Cimasp_owner:npg_LRdC2QzpgU8i@ep-billowing-block-acttwjcg-pooler.sa-east-1.aws.neon.tech/Sistema%20Controle%20Pos-venda%20Cimasp?sslmode=require';
+  return 'postgresql://postgres:cimasp%402020@overview-calendars.gl.at.ply.gg:50285/sysposvendas?sslmode=disable';
 }
 
 // Configuração da conexão com o banco Neon PostgreSQL
@@ -189,7 +189,7 @@ app.whenReady().then(async () => {
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
       )
     `, [
-      id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manfacturing_date,
+      id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manufacturing_date,
       record.call_opening_date, record.technician, record.assistance_type, record.assistance_location,
       record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
       record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
@@ -205,6 +205,14 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('updateServiceRecord', async (event, id, updated) => {
+    // Corrige supplier_warranty para inteiro
+    if (typeof updated.supplier_warranty === 'boolean') {
+      updated.supplier_warranty = updated.supplier_warranty ? 1 : 0;
+    }
+    if (typeof updated.supplier_warranty === 'string') {
+      if (updated.supplier_warranty === 'true') updated.supplier_warranty = 1;
+      else if (updated.supplier_warranty === 'false') updated.supplier_warranty = 0;
+    }
     const validFields = [
       'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
       'call_opening_date', 'technician', 'assistance_type', 'assistance_location',

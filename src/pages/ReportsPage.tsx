@@ -452,7 +452,13 @@ export const ReportsPage: React.FC = () => {
                         {record.equipment}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(record.call_opening_date).toLocaleDateString('pt-BR')}
+                        {/* Exibe a data manualmente, sem new Date para evitar problemas de timezone */}
+                        {record.call_opening_date && record.call_opening_date.length >= 10
+                          ? (() => {
+                              const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
+                              return `${day}/${month}/${year}`;
+                            })()
+                          : record.call_opening_date || ''}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {record.technician}

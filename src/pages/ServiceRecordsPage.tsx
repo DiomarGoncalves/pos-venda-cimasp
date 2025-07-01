@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { getServiceRecords } from '../services/serviceRecordService';
+import { getServiceRecords, createServiceRecord } from '../services/serviceRecordService';
 import { ServiceRecord } from '../types';
 import { motion } from 'framer-motion';
 import { Plus, Search, FileDown, Clock, CheckCircle } from 'lucide-react';
@@ -16,12 +16,19 @@ export const ServiceRecordsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const data = await getServiceRecords();
+        let data = await getServiceRecords();
+        // Ordena por call_opening_date decrescente (mais recente primeiro)
+        data = data.sort((a, b) => {
+          const dateA = new Date(a.call_opening_date).getTime();
+          const dateB = new Date(b.call_opening_date).getTime();
+          return dateB - dateA;
+        });
         setRecords(data);
         setFilteredRecords(data);
       } catch (err) {
@@ -37,28 +44,58 @@ export const ServiceRecordsPage: React.FC = () => {
 
   useEffect(() => {
     let result = records;
-    
+
     // Apply status filter
     if (statusFilter !== 'all') {
       result = result.filter(record => {
-        const hasServiceDate = !!record.serviceDate;
+        // Aceita tanto camelCase quanto snake_case
+        const hasServiceDate = !!(record.serviceDate ?? record.service_date);
         return statusFilter === 'completed' ? hasServiceDate : !hasServiceDate;
       });
     }
-    
+
     // Apply search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(record => 
-        record.orderNumber.toLowerCase().includes(term) ||
-        record.client.toLowerCase().includes(term) ||
-        record.equipment.toLowerCase().includes(term) ||
-        record.chassisPlate.toLowerCase().includes(term)
-      );
+      result = result.filter(record => {
+        // Busca em ambos os formatos de campo
+        const orderNumber = record.orderNumber ?? record.order_number ?? '';
+        const client = record.client ?? '';
+        const equipment = record.equipment ?? '';
+        const chassisPlate = record.chassisPlate ?? record.chassis_plate ?? '';
+        return (
+          (orderNumber && orderNumber.toLowerCase().includes(term)) ||
+          (client && client.toLowerCase().includes(term)) ||
+          (equipment && equipment.toLowerCase().includes(term)) ||
+          (chassisPlate && chassisPlate.toLowerCase().includes(term))
+        );
+      });
     }
-    
+
+    // Ordena novamente após filtrar
+    result = result.sort((a, b) => {
+      const dateA = new Date(a.call_opening_date).getTime();
+      const dateB = new Date(b.call_opening_date).getTime();
+      return dateB - dateA;
+    });
+
     setFilteredRecords(result);
   }, [searchTerm, statusFilter, records]);
+
+  const handleDuplicate = async (record: ServiceRecord) => {
+    try {
+      // Copia todas as informações do atendimento original
+      const { id, createdAt, updatedAt, created_at, updated_at, ...rest } = record as any;
+      const newRecordData = { ...rest };
+      const newRecord = await createServiceRecord(newRecordData);
+      if (newRecord && newRecord.id) {
+        navigate(`/service-records/${newRecord.id}/edit`);
+      }
+    } catch (err) {
+      alert('Erro ao duplicar atendimento');
+      console.error('Erro ao duplicar atendimento:', err);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -178,7 +215,13 @@ export const ServiceRecordsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(record.call_opening_date).toLocaleDateString('pt-BR')}
+                        {/* Exibe a data manualmente, sem new Date para evitar problemas de timezone */}
+                        {record.call_opening_date && record.call_opening_date.length >= 10
+                          ? (() => {
+                              const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
+                              return `${day}/${month}/${year}`;
+                            })()
+                          : record.call_opening_date || ''}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -212,10 +255,17 @@ export const ServiceRecordsPage: React.FC = () => {
                       </Link>
                       <Link 
                         to={`/service-records/${record.id}/edit`}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
                       >
                         Editar
                       </Link>
+                      <button
+                        className="text-gray-600 hover:text-blue-700"
+                        title="Duplicar atendimento"
+                        onClick={() => handleDuplicate(record)}
+                      >
+                        Duplicar
+                      </button>
                     </td>
                   </motion.tr>
                 ))

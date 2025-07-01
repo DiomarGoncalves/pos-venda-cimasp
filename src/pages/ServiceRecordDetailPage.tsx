@@ -288,7 +288,9 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   <h3 className="text-sm font-medium text-gray-500">Data de Fabricação</h3>
                   <p className="mt-1 text-lg">
                     {record.manufacturing_date
-                      ? new Date(record.manufacturing_date).toLocaleDateString('pt-BR')
+                      ? record.manufacturing_date.length >= 10
+                        ? record.manufacturing_date.slice(8, 10) + '/' + record.manufacturing_date.slice(5, 7) + '/' + record.manufacturing_date.slice(0, 4)
+                        : record.manufacturing_date
                       : '—'
                     }
                   </p>
