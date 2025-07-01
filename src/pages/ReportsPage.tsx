@@ -21,6 +21,79 @@ import {
   Calendar
 } from 'lucide-react';
 
+// Função utilitária para formatar valores monetários
+function formatCurrencyBR(value: number | undefined | null) {
+  if (typeof value !== 'number') value = Number(value) || 0;
+  // Garante separador de milhar e centavos no padrão brasileiro
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+}
+
+// Função para exportar lista resumida (apenas colunas visíveis)
+async function exportResumoExcel(records: ServiceRecord[], filename = 'lista-resumida.xlsx') {
+  const { default: ExcelJS } = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Lista Resumida');
+
+  worksheet.columns = [
+    { header: 'OF', key: 'order_number', width: 12 },
+    { header: 'Cliente', key: 'client', width: 25 },
+    { header: 'Equipamento', key: 'equipment', width: 18 },
+    { header: 'Data Abertura', key: 'call_opening_date', width: 16 },
+    { header: 'Técnico', key: 'technician', width: 18 },
+    { header: 'Status', key: 'status', width: 12 },
+    { header: 'Custos', key: 'custos', width: 16 },
+  ];
+
+  // Header style
+  worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  worksheet.getRow(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF1E40AF' },
+  };
+  worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // Add data rows
+  records.forEach(record => {
+    const custos = (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
+    worksheet.addRow({
+      order_number: record.order_number,
+      client: record.client,
+      equipment: record.equipment,
+      call_opening_date: record.call_opening_date && record.call_opening_date.length >= 10
+        ? (() => {
+            const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
+            return `${day}/${month}/${year}`;
+          })()
+        : record.call_opening_date || '',
+      technician: record.technician,
+      status: record.service_date ? 'Concluído' : 'Pendente',
+      custos: formatCurrencyBR(custos),
+    });
+  });
+
+  // Borders
+  worksheet.eachRow({ includeEmpty: true }, (row) => {
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export const ReportsPage: React.FC = () => {
   const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<ServiceRecord[]>([]);
@@ -222,7 +295,7 @@ export const ReportsPage: React.FC = () => {
             disabled={filteredRecords.length === 0}
           >
             {!exporting && <FileDown className="mr-2 h-4 w-4" />}
-            Exportar para Excel
+            Exportar para Excel (lista completa)
           </Button>
           <input
             ref={fileInputRef}
@@ -278,10 +351,10 @@ export const ReportsPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {stats.totalCost.toFixed(2).replace('.', ',')}
+              {formatCurrencyBR(stats.totalCost)}
             </div>
             <div className="text-xs text-gray-500 mt-2">
-              Custo médio: R$ {stats.averageCost.toFixed(2).replace('.', ',')}
+              Custo médio: {formatCurrencyBR(stats.averageCost)}
             </div>
           </CardContent>
         </Card>
@@ -408,7 +481,17 @@ export const ReportsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Resultados</CardTitle>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+            <CardTitle>Resultados</CardTitle>
+            <Button
+              onClick={() => exportResumoExcel(filteredRecords, `lista-resumida-${new Date().toISOString().split('T')[0]}.xlsx`)}
+              className="mt-3 md:mt-0 bg-blue-700 hover:bg-blue-800 text-white"
+              disabled={filteredRecords.length === 0}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              Exportar para excel (Lista Resumida)
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -473,7 +556,9 @@ export const ReportsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        R$ {((record.part_labor_cost || 0) + (record.travel_freight_cost || 0)).toFixed(2).replace('.', ',')}
+                        {formatCurrencyBR(
+                          (record.part_labor_cost || 0) + (record.travel_freight_cost || 0)
+                        )}
                       </td>
                     </tr>
                   ))
