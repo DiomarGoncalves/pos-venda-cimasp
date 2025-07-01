@@ -25,4 +25,5 @@ dist-ssr
 .env
 
 out/
-Output/mysetup.exe
+Output
+.exe
