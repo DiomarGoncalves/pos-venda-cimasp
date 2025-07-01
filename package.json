@@ -1,5 +1,5 @@
 {
-  "name": "controle-pos-venda-cimasp",
+  "name": "pos-venda",
   "private": true,
   "version": "1.0.0",
   "description": "Sistema Controle Pos-Venda Cimasp",
@@ -14,9 +14,11 @@
     "electron:preview": "electron .",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
   "dependencies": {
+    "@electron-forge/publisher-github": "^7.8.1",
     "better-sqlite3": "^11.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
@@ -24,10 +26,13 @@
     "dotenv": "^16.5.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.6.2",
     "exceljs": "^4.4.0",
     "export": "^0.1.337",
     "express": "^5.1.0",
     "framer-motion": "^11.1.12",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.344.0",
     "multer": "^2.0.1",
     "pg": "^8.16.0",
