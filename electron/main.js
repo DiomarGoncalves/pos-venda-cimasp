@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { autoUpdater } = require('electron-updater'); // ADICIONE ESTA LINHA
 const { join } = require('path');
 // Remover: const Database = require('better-sqlite3');
 const { v4: uuidv4 } = require('uuid');
@@ -146,9 +147,35 @@ function writeConfigFile(config) {
   fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
 }
 
+// --- AUTO-UPDATER ---
+function setupAutoUpdater() {
+  // Verifica updates ao iniciar
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-available', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('update-available');
+    }
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('update-downloaded');
+    }
+  });
+
+  // Opcional: reinicia o app após update baixado
+  ipcMain.on('restart-app-for-update', () => {
+    autoUpdater.quitAndInstall();
+  });
+}
+
 app.whenReady().then(async () => {
   await ensureTables();
   createWindow();
+
+  // INICIA O AUTO-UPDATER
+  setupAutoUpdater();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

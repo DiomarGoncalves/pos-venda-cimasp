@@ -20,6 +20,8 @@ import {
   PieChart,
   Calendar
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Função utilitária para formatar valores monetários
 function formatCurrencyBR(value: number | undefined | null) {
@@ -271,6 +273,99 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  // Função para exportar a página (exceto menu lateral e filtros) para PDF
+  const handleExportPDF = async () => {
+    const mainContent = document.querySelector('.space-y-6');
+    if (!mainContent) {
+      alert('Conteúdo não encontrado para exportação.');
+      return;
+    }
+    const sidebar = document.querySelector('.app-sidebar') as HTMLElement | null;
+    if (sidebar) sidebar.style.display = 'none';
+
+    // Esconde a seção de filtros temporariamente
+    const filterCard = Array.from(mainContent.children).find(
+      (el) =>
+        el.querySelector &&
+        el.querySelector('input[type="date"]') // identifica pelo input de data
+    ) as HTMLElement | undefined;
+    if (filterCard) filterCard.style.display = 'none';
+
+    // Captura a tela visível (primeira página)
+    const canvasMain = await html2canvas(mainContent as HTMLElement, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#fff'
+    });
+    const imgDataMain = canvasMain.toDataURL('image/png');
+
+    // Agora captura só a tabela (para as próximas páginas, se necessário)
+    const tableCard = mainContent.querySelector('table');
+    let tablePages: string[] = [];
+    if (tableCard) {
+      // Mostra só a tabela para capturar o restante (caso a tabela seja longa)
+      // Cria um clone da tabela para evitar scroll e cortes
+      const tableClone = tableCard.cloneNode(true) as HTMLElement;
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.background = '#fff';
+      wrapper.appendChild(tableClone);
+      document.body.appendChild(wrapper);
+
+      // Divide a tabela em páginas se necessário
+      const pageHeightPx = 1122; // Aproximadamente 1122px para A4 em 96dpi
+      let scrollTop = 0;
+      let totalHeight = wrapper.offsetHeight;
+      while (scrollTop < totalHeight) {
+        wrapper.scrollTop = scrollTop;
+        const canvasTable = await html2canvas(wrapper, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#fff',
+          height: pageHeightPx,
+          y: scrollTop
+        });
+        tablePages.push(canvasTable.toDataURL('image/png'));
+        scrollTop += pageHeightPx;
+      }
+      document.body.removeChild(wrapper);
+    }
+
+    // Monta o PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: 'a4'
+    });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Primeira página: tela visível (sem filtros)
+    const imgPropsMain = new window.Image();
+    imgPropsMain.src = imgDataMain;
+    await new Promise((resolve) => (imgPropsMain.onload = resolve));
+    const imgWidthMain = pageWidth;
+    const imgHeightMain = (imgPropsMain.height * imgWidthMain) / imgPropsMain.width;
+    pdf.addImage(imgDataMain, 'PNG', 0, 0, imgWidthMain, imgHeightMain > pageHeight ? pageHeight : imgHeightMain);
+
+    // Demais páginas: tabela (caso necessário)
+    for (let i = 1; i < tablePages.length; i++) {
+      pdf.addPage();
+      const imgProps = new window.Image();
+      imgProps.src = tablePages[i];
+      await new Promise((resolve) => (imgProps.onload = resolve));
+      const imgWidth = pageWidth;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+      pdf.addImage(tablePages[i], 'PNG', 0, 0, imgWidth, imgHeight > pageHeight ? pageHeight : imgHeight);
+    }
+
+    pdf.save(`relatorio-atendimentos-${new Date().toISOString().split('T')[0]}.pdf`);
+
+    // Restaura filtros e sidebar
+    if (filterCard) filterCard.style.display = '';
+    if (sidebar) sidebar.style.display = '';
+  };
+
   // Get unique clients and technicians for filters
   const clients = [...new Set(records.map(r => r.client))];
   const technicians = [...new Set(records.map(r => r.technician))];
@@ -287,15 +382,22 @@ export const ReportsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-        
         <div className="flex gap-2">
           <Button 
-            onClick={handleExport} 
+            onClick={handleExport}
             isLoading={exporting}
             disabled={filteredRecords.length === 0}
           >
             {!exporting && <FileDown className="mr-2 h-4 w-4" />}
-            Exportar para Excel (lista completa)
+            Exportar para Excel
+          </Button>
+          <Button
+            onClick={handleExportPDF}
+            disabled={filteredRecords.length === 0}
+            className="bg-blue-700 hover:bg-blue-800 text-white"
+            type="button"
+          >
+            Exportar para PDF
           </Button>
           <input
             ref={fileInputRef}
@@ -463,35 +565,10 @@ export const ReportsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {error && (
-        <div className="p-4 bg-red-50 text-red-600 rounded-md">
-          {error}
-        </div>
-      )}
-      {importSuccess && (
-        <div className="p-3 bg-green-50 text-green-600 rounded-md mt-2">
-          {importSuccess}
-        </div>
-      )}
-      {importError && (
-        <div className="p-3 bg-red-50 text-red-600 rounded-md mt-2">
-          {importError}
-        </div>
-      )}
-
+      {/* Tabela de registros */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
-            <CardTitle>Resultados</CardTitle>
-            <Button
-              onClick={() => exportResumoExcel(filteredRecords, `lista-resumida-${new Date().toISOString().split('T')[0]}.xlsx`)}
-              className="mt-3 md:mt-0 bg-blue-700 hover:bg-blue-800 text-white"
-              disabled={filteredRecords.length === 0}
-            >
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar para excel (Lista Resumida)
-            </Button>
-          </div>
+          <CardTitle>Registros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

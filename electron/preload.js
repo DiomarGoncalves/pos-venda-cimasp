@@ -26,5 +26,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // IMPORTAÇÃO DE EXCEL (opcional, se quiser processar no backend)
   importExcel: (filePath) => ipcRenderer.invoke('importExcel', filePath),
 
+  // Atualização automática
+  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
+  restartAppForUpdate: () => ipcRenderer.send('restart-app-for-update'),
+
   // Adicione outros métodos conforme necessário
 });

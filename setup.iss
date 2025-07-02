@@ -5,7 +5,7 @@
 #define MyAppVersion "1.5"
 #define MyAppPublisher "AlphaDevss"
 #define MyAppURL "https://www.alphadevss.com.br/"
-#define MyAppExeName "controle-pos-venda-cimasp.exe"
+#define MyAppExeName "pos-venda.exe"
 #define MyAppAssocName MyAppName + " File"
 #define MyAppAssocExt ".myp"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
@@ -27,7 +27,7 @@ DisableProgramGroupPage=yes
 OutputBaseFilename=Sistema Posvenda Cimasp
 SolidCompression=yes
 WizardStyle=modern
-SetupIconFile=C:\Users\posvenda\Documents\GitHub\pos-venda-cimasp\src\assets\favicon.ico
+SetupIconFile=J:\GitHub\pos-venda-cimasp\src\assets\favicon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -37,9 +37,9 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\posvenda\Documents\GitHub\pos-venda-cimasp\out\controle-pos-venda-cimasp-win32-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\posvenda\Documents\GitHub\pos-venda-cimasp\out\controle-pos-venda-cimasp-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\posvenda\Documents\GitHub\pos-venda-cimasp\src\assets\favicon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "J:\GitHub\pos-venda-cimasp\out\pos-venda-win32-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "J:\GitHub\pos-venda-cimasp\out\pos-venda-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "J:\GitHub\pos-venda-cimasp\src\assets\favicon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue

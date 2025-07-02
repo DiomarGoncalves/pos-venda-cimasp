@@ -30,6 +30,10 @@ export const SettingsPage: React.FC = () => {
   // Nova variável de ambiente para conexão do banco de dados
   const [dbUrl, setDbUrl] = useState('');
 
+  // Estado para update automático
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [updateDownloaded, setUpdateDownloaded] = useState(false);
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -52,6 +56,27 @@ export const SettingsPage: React.FC = () => {
     };
 
     loadConfig();
+
+    // Escuta eventos de update automático
+    const handleUpdateAvailable = () => setUpdateAvailable(true);
+    const handleUpdateDownloaded = () => setUpdateDownloaded(true);
+
+    if (window.electronAPI?.onUpdateAvailable) {
+      window.electronAPI.onUpdateAvailable(handleUpdateAvailable);
+    }
+    if (window.electronAPI?.onUpdateDownloaded) {
+      window.electronAPI.onUpdateDownloaded(handleUpdateDownloaded);
+    }
+
+    // Cleanup para evitar múltiplos listeners
+    return () => {
+      if (window.electronAPI?.onUpdateAvailable) {
+        window.electronAPI.onUpdateAvailable(() => {});
+      }
+      if (window.electronAPI?.onUpdateDownloaded) {
+        window.electronAPI.onUpdateDownloaded(() => {});
+      }
+    };
   }, []);
 
   const handleSave = async () => {
@@ -279,6 +304,30 @@ export const SettingsPage: React.FC = () => {
           {saveError && <div className="mt-2 text-red-600">{saveError}</div>}
         </CardContent>
       </Card>
+
+      {/* Modal de atualização automática */}
+      {updateAvailable && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-bold mb-2">Atualização disponível</h2>
+            <p className="mb-4">Uma nova versão está disponível e será baixada em segundo plano.</p>
+            <Button onClick={() => setUpdateAvailable(false)}>OK</Button>
+          </div>
+        </div>
+      )}
+      {updateDownloaded && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-bold mb-2">Atualização pronta</h2>
+            <p className="mb-4">A atualização foi baixada. Reinicie o aplicativo para aplicar.</p>
+            <Button
+              onClick={() => window.electronAPI.restartAppForUpdate()}
+            >
+              Reiniciar e atualizar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
