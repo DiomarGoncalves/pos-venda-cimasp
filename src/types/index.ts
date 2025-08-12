@@ -20,7 +20,8 @@ declare global {
 // User model
 export interface User {
   id: string;
-  email: string;
+  username: string;
+  email?: string;
   name?: string;
   role: 'admin' | 'technician';
   createdAt: string;
@@ -29,32 +30,58 @@ export interface User {
 // Technical service record
 export interface ServiceRecord {
   id: string;
-  orderNumber: string;
+  orderNumber?: string;
+  order_number: string;
   equipment: string;
-  chassisPlate: string;
+  chassisPlate?: string;
+  chassis_plate?: string;
   client: string;
-  manufacturingDate: string;
-  callOpeningDate: string;
+  manufacturingDate?: string;
+  manufacturing_date?: string;
+  callOpeningDate?: string;
+  call_opening_date: string;
   technician: string;
-  assistanceType: 'CORTESIA' | 'ASSISTENCIA' | 'NÃO PROCEDE';
-  assistanceLocation: string;
-  contactPerson: string;
+  assistanceType?: 'CORTESIA' | 'ASSISTENCIA' | 'NÃO PROCEDE';
+  assistance_type: 'CORTESIA' | 'ASSISTENCIA' | 'NÃO PROCEDE';
+  assistanceLocation?: string;
+  assistance_location?: string;
+  contactPerson?: string;
+  contact_person?: string;
   phone: string;
-  reportedIssue: 'ESTRUTURAL' | 'ELETRICA' | 'HIDRAULICA' | 'ELETRICA/HIDRAULICA' | 'ELETRICA/ESTRUTURAL' | 'HIDRAULICA/ESTRUTURAL' | 'ELETRICA/HIDRAULICA/ESTRUTURAL' | 'IMPLEMENTAÇÃO/ADEQUAÇÃO/ENTRE EIXO';
+  reportedIssue?: 'ESTRUTURAL' | 'ELETRICA' | 'HIDRAULICA' | 'ELETRICA/HIDRAULICA' | 'ELETRICA/ESTRUTURAL' | 'HIDRAULICA/ESTRUTURAL' | 'ELETRICA/HIDRAULICA/ESTRUTURAL' | 'IMPLEMENTAÇÃO/ADEQUAÇÃO/ENTRE EIXO';
+  reported_issue: 'ESTRUTURAL' | 'ELETRICA' | 'HIDRAULICA' | 'ELETRICA/HIDRAULICA' | 'ELETRICA/ESTRUTURAL' | 'HIDRAULICA/ESTRUTURAL' | 'ELETRICA/HIDRAULICA/ESTRUTURAL' | 'IMPLEMENTAÇÃO/ADEQUAÇÃO/ENTRE EIXO';
   supplier: string;
   part: string;
   observations: string;
-  serviceDate: string;
-  responsibleTechnician: string;
-  partLaborCost: number;
-  travelFreightCost: number;
-  partReturn: string;
-  supplierWarranty: boolean;
-  technicalSolution: string;
+  serviceDate?: string;
+  service_date?: string;
+  responsibleTechnician?: string;
+  responsible_technician?: string;
+  partLaborCost?: number;
+  part_labor_cost?: number;
+  travelFreightCost?: number;
+  travel_freight_cost?: number;
+  partReturn?: string;
+  part_return?: string;
+  supplierWarranty?: boolean;
+  supplier_warranty?: boolean | number;
+  technicalSolution?: string;
+  technical_solution?: string;
   attachments?: Attachment[];
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  createdBy?: string;
+  created_by?: string;
+  additionalCosts?: AdditionalCost[];
+}
+
+// Additional cost model
+export interface AdditionalCost {
+  id: string;
+  description: string;
+  amount: number;
 }
 
 // Attachment model

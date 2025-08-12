@@ -1,5 +1,6 @@
 import { Attachment } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { cacheService } from './cacheService';
 
 export const uploadAttachment = async (
   serviceRecordId: string,
@@ -9,15 +10,14 @@ export const uploadAttachment = async (
     const fileId = uuidv4();
     const arrayBuffer = await file.arrayBuffer();
 
-    // Salva no banco via IPC, incluindo o buffer do arquivo
-    await window.electronAPI.addAttachment({
+    const attachmentData = {
       service_record_id: serviceRecordId,
       filename: file.name,
       mimetype: file.type,
       size: file.size,
       uploaded_by: null, // ajuste conforme necessário
       buffer: Array.from(new Uint8Array(arrayBuffer)), // envia o conteúdo do arquivo
-    });
+    };
 
     const newAttachment: Attachment = {
       id: fileId,
@@ -25,21 +25,51 @@ export const uploadAttachment = async (
       filename: file.name,
       fileType: file.type,
       fileSize: file.size,
-      url: '', // não há url local, pode ser preenchido com id ou vazio
+      url: '',
       createdAt: new Date().toISOString(),
     };
+
+    // Salva no cache local
+    await cacheService.saveAttachment(newAttachment);
+    
+    // Adiciona à fila de sincronização
+    await cacheService.addToSyncQueue({
+      id: uuidv4(),
+      type: 'create',
+      table: 'attachments',
+      data: attachmentData
+    });
+    
+    // Tenta sincronizar imediatamente (em background)
+    cacheService.syncWithServer().catch(console.error);
 
     return newAttachment;
   } catch (error) {
     console.error('Upload attachment error:', error);
-    return null;
+    throw error;
   }
 };
 
 export const getAttachments = async (serviceRecordId: string): Promise<Attachment[]> => {
   try {
-    const attachments = await window.electronAPI.getAttachments(serviceRecordId);
-    return attachments || [];
+    // Busca primeiro no cache local
+    let attachments = await cacheService.getAttachments(serviceRecordId);
+    
+    // Se não tem dados no cache ou precisa sincronizar, busca do servidor
+    if (attachments.length === 0 || await cacheService.needsSync()) {
+      try {
+        const serverAttachments = await window.electronAPI.getAttachments(serviceRecordId);
+        for (const attachment of serverAttachments) {
+          await cacheService.saveAttachment(attachment);
+        }
+        attachments = serverAttachments;
+      } catch (error) {
+        console.error('Erro ao buscar anexos do servidor:', error);
+        // Usa dados do cache mesmo se a sincronização falhar
+      }
+    }
+    
+    return attachments;
   } catch (error) {
     console.error('Get attachments error:', error);
     return [];
@@ -48,7 +78,20 @@ export const getAttachments = async (serviceRecordId: string): Promise<Attachmen
 
 export const deleteAttachment = async (id: string): Promise<boolean> => {
   try {
-    await window.electronAPI.deleteAttachment(id);
+    // Remove do cache local
+    await cacheService.deleteAttachment(id);
+    
+    // Adiciona à fila de sincronização
+    await cacheService.addToSyncQueue({
+      id: uuidv4(),
+      type: 'delete',
+      table: 'attachments',
+      data: { id }
+    });
+    
+    // Tenta sincronizar imediatamente (em background)
+    cacheService.syncWithServer().catch(console.error);
+    
     return true;
   } catch (error) {
     console.error('Delete attachment error:', error);

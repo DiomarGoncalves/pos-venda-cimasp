@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const { autoUpdater } = require('electron-updater'); // ADICIONE ESTA LINHA
+const { autoUpdater } = require('electron-updater');
 const { join } = require('path');
 // Remover: const Database = require('better-sqlite3');
 const { v4: uuidv4 } = require('uuid');
@@ -73,6 +73,7 @@ async function ensureTables() {
       part_return TEXT,
       supplier_warranty INTEGER DEFAULT 0,
       technical_solution TEXT,
+      additional_costs TEXT, -- JSON string para custos adicionais
       created_by TEXT REFERENCES users(id),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -149,24 +150,68 @@ function writeConfigFile(config) {
 
 // --- AUTO-UPDATER ---
 function setupAutoUpdater() {
-  // Verifica updates ao iniciar
+  // Configurações do auto-updater
   autoUpdater.checkForUpdatesAndNotify();
+  
+  // Log para debug
+  autoUpdater.logger = require('electron-log');
+  autoUpdater.logger.transports.file.level = 'info';
+  
+  // Verifica atualizações a cada 10 minutos
+  setInterval(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 10 * 60 * 1000);
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Verificando atualizações...');
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('Nenhuma atualização disponível.');
+  });
 
   autoUpdater.on('update-available', () => {
+    console.log('Atualização disponível! Baixando...');
     if (mainWindow) {
       mainWindow.webContents.send('update-available');
     }
   });
 
+  autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Velocidade de download: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Baixado ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    console.log(log_message);
+    if (mainWindow) {
+      mainWindow.webContents.send('download-progress', progressObj);
+    }
+  });
+
   autoUpdater.on('update-downloaded', () => {
+    console.log('Atualização baixada! Será instalada ao reiniciar.');
     if (mainWindow) {
       mainWindow.webContents.send('update-downloaded');
     }
   });
 
-  // Opcional: reinicia o app após update baixado
+  autoUpdater.on('error', (err) => {
+    console.error('Erro no auto-updater:', err);
+    if (mainWindow) {
+      mainWindow.webContents.send('update-error', err.message);
+    }
+  });
+
+  // IPC handlers para controle manual
+  ipcMain.on('check-for-updates', () => {
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+
   ipcMain.on('restart-app-for-update', () => {
     autoUpdater.quitAndInstall();
+  });
+
+  ipcMain.on('install-update-now', () => {
+    autoUpdater.quitAndInstall(false, true);
   });
 }
 
@@ -199,21 +244,27 @@ app.whenReady().then(async () => {
   // IPC handlers para SERVICE RECORDS
   ipcMain.handle('getServiceRecords', async () => {
     const { rows } = await pool.query('SELECT * FROM service_records');
-    return rows;
+    // Parse additional_costs JSON para cada registro
+    return rows.map(row => ({
+      ...row,
+      additional_costs: row.additional_costs ? JSON.parse(row.additional_costs) : []
+    }));
   });
 
   ipcMain.handle('addServiceRecord', async (event, record) => {
     const id = uuidv4();
     // Garante que created_by seja null se não enviado
     const createdBy = record.created_by || null;
+    // Serializa custos adicionais como JSON
+    const additionalCosts = record.additional_costs ? JSON.stringify(record.additional_costs) : '[]';
     await pool.query(`
       INSERT INTO service_records (
         id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
         technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
         supplier, part, observations, service_date, responsible_technician, part_labor_cost,
-        travel_freight_cost, part_return, supplier_warranty, technical_solution, created_by
+        travel_freight_cost, part_return, supplier_warranty, technical_solution, additional_costs, created_by
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
       )
     `, [
       id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manufacturing_date,
@@ -221,9 +272,10 @@ app.whenReady().then(async () => {
       record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
       record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
       record.travel_freight_cost, record.part_return, record.supplier_warranty, record.technical_solution,
+      additionalCosts,
       createdBy
     ]);
-    return { id, ...record, created_by: createdBy };
+    return { id, ...record, created_by: createdBy, additional_costs: record.additional_costs || [] };
   });
 
   ipcMain.handle('deleteServiceRecord', async (event, id) => {
@@ -240,12 +292,18 @@ app.whenReady().then(async () => {
       if (updated.supplier_warranty === 'true') updated.supplier_warranty = 1;
       else if (updated.supplier_warranty === 'false') updated.supplier_warranty = 0;
     }
+    
+    // Serializa custos adicionais como JSON
+    if (updated.additional_costs) {
+      updated.additional_costs = JSON.stringify(updated.additional_costs);
+    }
+    
     const validFields = [
       'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
       'call_opening_date', 'technician', 'assistance_type', 'assistance_location',
       'contact_person', 'phone', 'reported_issue', 'supplier', 'part', 'observations',
       'service_date', 'responsible_technician', 'part_labor_cost', 'travel_freight_cost',
-      'part_return', 'supplier_warranty', 'technical_solution',
+      'part_return', 'supplier_warranty', 'technical_solution', 'additional_costs',
       // Remover 'created_by' daqui
       'created_at', 'updated_at'
     ];

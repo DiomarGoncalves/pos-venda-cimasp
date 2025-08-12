@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const loadUser = async () => {
+      setLoading(true);
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);

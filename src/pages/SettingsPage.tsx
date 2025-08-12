@@ -4,6 +4,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { ApiConfig } from '../types';
 import { Save, RefreshCw, Key } from 'lucide-react';
+import { cacheService } from '../services/cacheService';
 
 const DEFAULT_DB_PATH = 'Padrão: <userData>/database.sqlite';
 const DEFAULT_ATTACHMENTS_PATH = 'Padrão: \\\\192.168.1.2\\publica\\POS-VENDAS\\sistema\\anexos';
@@ -33,6 +34,15 @@ export const SettingsPage: React.FC = () => {
   // Estado para update automático
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
+  
+  // Estados para cache
+  const [cacheSize, setCacheSize] = useState<string>('Calculando...');
+  const [lastSync, setLastSync] = useState<string>('Nunca');
+  const [clearingCache, setClearingCache] = useState(false);
+  
+  // Estados para atualização
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -47,6 +57,9 @@ export const SettingsPage: React.FC = () => {
         if (savedDbUrl) {
           setDbUrl(savedDbUrl);
         }
+        
+        // Carrega informações do cache
+        await loadCacheInfo();
       } catch (error) {
         setSaveError('Erro ao carregar configuração');
         console.error('Error loading configuration:', error);
@@ -78,6 +91,25 @@ export const SettingsPage: React.FC = () => {
       }
     };
   }, []);
+
+  const loadCacheInfo = async () => {
+    try {
+      // Calcula tamanho do cache (aproximado)
+      const serviceRecords = await cacheService.getServiceRecords();
+      const users = await cacheService.getUsers();
+      setCacheSize(`${serviceRecords.length} atendimentos, ${users.length} usuários`);
+      
+      // Última sincronização
+      const lastSyncTime = await cacheService.getLastSyncTime();
+      if (lastSyncTime) {
+        setLastSync(new Date(lastSyncTime).toLocaleString('pt-BR'));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar informações do cache:', error);
+      setCacheSize('Erro ao calcular');
+      setLastSync('Erro ao verificar');
+    }
+  };
 
   const handleSave = async () => {
     setSaveError(null);
@@ -149,6 +181,58 @@ export const SettingsPage: React.FC = () => {
       console.error('Error saving DB URL configuration:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    if (!confirm('Tem certeza que deseja limpar o cache? Isso irá remover todos os dados locais e será necessário sincronizar novamente.')) {
+      return;
+    }
+    
+    try {
+      setClearingCache(true);
+      await cacheService.clearCache();
+      await loadCacheInfo();
+      alert('Cache limpo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao limpar cache:', error);
+      alert('Erro ao limpar cache.');
+    } finally {
+      setClearingCache(false);
+    }
+  };
+
+  const handleForceSync = async () => {
+    try {
+      setSaving(true);
+      await cacheService.syncWithServer();
+      await loadCacheInfo();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error);
+      setSaveError('Erro ao sincronizar dados');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCheckUpdates = () => {
+    setCheckingUpdates(true);
+    setUpdateMessage(null);
+    
+    if (window.electronAPI?.checkForUpdates) {
+      window.electronAPI.checkForUpdates();
+      setUpdateMessage('Verificando atualizações...');
+      
+      // Simula feedback após 3 segundos
+      setTimeout(() => {
+        setCheckingUpdates(false);
+        setUpdateMessage('Verificação concluída. Se houver atualizações, você será notificado.');
+      }, 3000);
+    } else {
+      setCheckingUpdates(false);
+      setUpdateMessage('Função de atualização não disponível.');
     }
   };
 
@@ -271,14 +355,48 @@ export const SettingsPage: React.FC = () => {
               <p className="text-gray-600">1.0.0</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-1">Sincronização</h3>
-              <div className="flex items-center mt-2">
-                <span className="text-sm text-gray-600 mr-2">
-                  Último sincronismo: Nunca
-                </span>
-                <Button variant="outline" size="sm">
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Atualizações</h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleCheckUpdates}
+                isLoading={checkingUpdates}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Verificar Atualizações
+              </Button>
+              {updateMessage && (
+                <p className="text-xs text-gray-600 mt-1">{updateMessage}</p>
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Cache Local</h3>
+              <p className="text-gray-600 text-sm">{cacheSize}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Última Sincronização</h3>
+              <p className="text-gray-600 text-sm">{lastSync}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Ações</h3>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleForceSync}
+                  isLoading={saving}
+                >
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Sincronizar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleClearCache}
+                  isLoading={clearingCache}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Limpar Cache
                 </Button>
               </div>
             </div>
@@ -305,29 +423,6 @@ export const SettingsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Modal de atualização automática */}
-      {updateAvailable && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
-            <h2 className="text-lg font-bold mb-2">Atualização disponível</h2>
-            <p className="mb-4">Uma nova versão está disponível e será baixada em segundo plano.</p>
-            <Button onClick={() => setUpdateAvailable(false)}>OK</Button>
-          </div>
-        </div>
-      )}
-      {updateDownloaded && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
-            <h2 className="text-lg font-bold mb-2">Atualização pronta</h2>
-            <p className="mb-4">A atualização foi baixada. Reinicie o aplicativo para aplicar.</p>
-            <Button
-              onClick={() => window.electronAPI.restartAppForUpdate()}
-            >
-              Reiniciar e atualizar
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

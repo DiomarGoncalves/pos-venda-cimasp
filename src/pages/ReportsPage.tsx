@@ -634,7 +634,12 @@ export const ReportsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatCurrencyBR(
-                          (record.part_labor_cost || 0) + (record.travel_freight_cost || 0)
+                          (() => {
+                            const baseCosts = (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
+                            const additionalCosts = record.additional_costs ? 
+                              record.additional_costs.reduce((sum, cost) => sum + cost.amount, 0) : 0;
+                            return baseCosts + additionalCosts;
+                          })()
                         )}
                       </td>
                     </tr>

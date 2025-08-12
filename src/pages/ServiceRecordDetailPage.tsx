@@ -13,7 +13,7 @@ import {
   deleteServiceRecord 
 } from '../services/serviceRecordService';
 import { downloadAttachment, getAttachments, deleteAttachment } from '../services/attachmentService';
-import { ServiceRecord, Attachment } from '../types';
+import { ServiceRecord, Attachment, AdditionalCost } from '../types';
 import { ChevronLeft, Edit, Trash2, FileIcon, Download, Calendar, User, MapPin, PenTool as Tool, DollarSign, Clipboard, Check, X, AlertCircle, Clock, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -419,6 +419,22 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-start">
+                  <DollarSign className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Custo Total</h3>
+                    <p className="mt-1 text-lg font-semibold text-blue-600">
+                      {(() => {
+                        const baseCost = (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
+                        const additionalCost = record.additional_costs ? 
+                          record.additional_costs.reduce((sum, cost) => sum + cost.amount, 0) : 0;
+                        const total = baseCost + additionalCost;
+                        return `R$ ${total.toFixed(2).replace('.', ',')}`;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
                   <Clipboard className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Devolução de Peça</h3>
@@ -439,6 +455,28 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Custos Adicionais */}
+              {record.additional_costs && record.additional_costs.length > 0 && (
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-3">Custos Adicionais</h3>
+                  <div className="space-y-2">
+                    {record.additional_costs.map((cost: AdditionalCost) => (
+                      <div key={cost.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{cost.description}</span>
+                        <span className="text-sm font-medium">
+                          R$ {cost.amount.toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded font-medium">
+                      <span className="text-sm">Total Custos Adicionais:</span>
+                      <span className="text-sm">
+                        R$ {record.additional_costs.reduce((sum, cost) => sum + cost.amount, 0).toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
               {record.technical_solution && (
                 <div className="mt-6 border-t pt-4">
                   <h3 className="text-sm font-medium text-gray-500">Solução Técnica</h3>

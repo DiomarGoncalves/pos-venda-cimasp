@@ -30,8 +30,9 @@ module.exports = {
           owner: 'DiomarGoncalves',
           name: 'pos-venda-cimasp',
         },
-        prerelease: false,
+        prerelease: true, // Mude para false quando quiser releases estáveis
         draft: false,
+        generateReleaseNotes: true,
       },
     },
   ],

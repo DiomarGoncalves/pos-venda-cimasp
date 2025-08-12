@@ -15,7 +15,9 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "publish": "electron-forge publish"
+    "publish": "electron-forge publish",
+    "build:electron": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --publish=always"
   },
   "dependencies": {
     "@electron-forge/publisher-github": "^7.8.1",
