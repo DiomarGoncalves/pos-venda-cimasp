@@ -11,9 +11,11 @@ files:
   - "electron/**/*"
   - "node_modules/**/*"
   - "package.json"
+  - "app-update.yml"
 
 extraResources:
   - "src/assets/**/*"
+  - "app-update.yml"
 
 mac:
   category: public.app-category.business

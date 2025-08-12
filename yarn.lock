@@ -2306,11 +2306,6 @@ electron-installer-redhat@^3.2.0:
     word-wrap "^1.2.3"
     yargs "^16.0.2"
 
-electron-log@^5.4.2:
-  version "5.4.2"
-  resolved "https://registry.npmjs.org/electron-log/-/electron-log-5.4.2.tgz"
-  integrity sha512-L55kJzbVVoBY6kyJ3A+cjPchL1aXLdV2/Q8SvIj4sE5VmOcwZa6KXaFICZE+Z+RMXhAIFta79kSaXBqn+0XXMA==
-
 electron-rebuild@^3.2.9:
   version "3.2.9"
   resolved "https://registry.npmjs.org/electron-rebuild/-/electron-rebuild-3.2.9.tgz"

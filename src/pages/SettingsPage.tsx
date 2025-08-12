@@ -228,7 +228,9 @@ export const SettingsPage: React.FC = () => {
       // Simula feedback após 3 segundos
       setTimeout(() => {
         setCheckingUpdates(false);
-        setUpdateMessage('Verificação concluída. Se houver atualizações, você será notificado.');
+        if (!updateAvailable && !updateDownloaded) {
+          setUpdateMessage('Nenhuma atualização disponível no momento.');
+        }
       }, 3000);
     } else {
       setCheckingUpdates(false);

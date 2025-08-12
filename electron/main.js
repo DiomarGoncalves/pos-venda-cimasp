@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join } = require('path');
+const isDev = !app.isPackaged;
 // Remover: const Database = require('better-sqlite3');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
@@ -150,7 +151,21 @@ function writeConfigFile(config) {
 
 // --- AUTO-UPDATER ---
 function setupAutoUpdater() {
+  // Só configura auto-updater em produção
+  if (isDev) {
+    console.log('Auto-updater desabilitado em desenvolvimento');
+    return;
+  }
+
+  // Configura o caminho do arquivo de configuração
+  const updateConfigPath = join(process.resourcesPath, 'app-update.yml');
+  if (!fs.existsSync(updateConfigPath)) {
+    console.error('Arquivo app-update.yml não encontrado em:', updateConfigPath);
+    return;
+  }
+
   // Configurações do auto-updater
+  autoUpdater.updateConfigPath = updateConfigPath;
   autoUpdater.checkForUpdatesAndNotify();
   
   // Log para debug
@@ -203,15 +218,26 @@ function setupAutoUpdater() {
 
   // IPC handlers para controle manual
   ipcMain.on('check-for-updates', () => {
-    autoUpdater.checkForUpdatesAndNotify();
+    if (!isDev) {
+      autoUpdater.checkForUpdatesAndNotify();
+    } else {
+      console.log('Auto-updater não disponível em desenvolvimento');
+      if (mainWindow) {
+        mainWindow.webContents.send('update-error', 'Auto-updater não disponível em desenvolvimento');
+      }
+    }
   });
 
   ipcMain.on('restart-app-for-update', () => {
-    autoUpdater.quitAndInstall();
+    if (!isDev) {
+      autoUpdater.quitAndInstall();
+    }
   });
 
   ipcMain.on('install-update-now', () => {
-    autoUpdater.quitAndInstall(false, true);
+    if (!isDev) {
+      autoUpdater.quitAndInstall(false, true);
+    }
   });
 }
 

@@ -3,6 +3,9 @@ module.exports = {
   packagerConfig: {
     icon: 'src/assets/favicon',
     name: 'pos-venda', // Adicione esta linha para garantir nome curto
+    extraResource: [
+      'app-update.yml'
+    ]
   },
   rebuildConfig: {},
   makers: [
