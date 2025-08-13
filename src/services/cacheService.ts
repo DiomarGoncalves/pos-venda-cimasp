@@ -13,6 +13,7 @@ interface SyncQueue {
   table: 'service_records' | 'attachments' | 'users';
   data: any;
   timestamp: number;
+  retries: number;
 }
 
 class CacheService {
@@ -20,6 +21,7 @@ class CacheService {
   private version = 1;
   private db: IDBDatabase | null = null;
   private syncInProgress = false;
+  private autoSyncInterval: NodeJS.Timeout | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -28,6 +30,7 @@ class CacheService {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.db = request.result;
+        this.startAutoSync();
         resolve();
       };
 
@@ -61,6 +64,96 @@ class CacheService {
         }
       };
     });
+  }
+
+  // Inicia sincronização automática a cada 10 segundos
+  private startAutoSync(): void {
+    if (this.autoSyncInterval) {
+      clearInterval(this.autoSyncInterval);
+    }
+    
+    this.autoSyncInterval = setInterval(() => {
+      this.processSyncQueue().catch(error => {
+        console.warn('Auto-sync falhou:', error);
+      });
+    }, 10000); // 10 segundos - mais frequente
+  }
+
+  // Para a sincronização automática
+  private stopAutoSync(): void {
+    if (this.autoSyncInterval) {
+      clearInterval(this.autoSyncInterval);
+      this.autoSyncInterval = null;
+    }
+  }
+
+  // NOVA ESTRATÉGIA: Sempre tenta servidor primeiro, cache como fallback
+  async saveToServerFirst<T>(
+    operation: () => Promise<T>,
+    fallbackCacheOperation: () => Promise<void>,
+    syncQueueItem?: Omit<SyncQueue, 'timestamp' | 'retries'>
+  ): Promise<T> {
+    try {
+      // SEMPRE tenta servidor primeiro
+      if (navigator.onLine && window.electronAPI) {
+        console.log('💾 Salvando diretamente no servidor...');
+        const result = await operation();
+        
+        // Se salvou no servidor, também salva no cache para performance
+        await fallbackCacheOperation();
+        console.log('✅ Salvo no servidor e cache atualizado');
+        
+        return result;
+      } else {
+        throw new Error('Offline - usando cache');
+      }
+    } catch (error) {
+      console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+      
+      // Salva no cache como fallback
+      await fallbackCacheOperation();
+      
+      // Adiciona à fila de sincronização se fornecido
+      if (syncQueueItem) {
+        await this.addToSyncQueue(syncQueueItem);
+      }
+      
+      // Retorna um resultado padrão ou relança o erro dependendo do contexto
+      throw new Error('Salvo offline - será sincronizado quando possível');
+    }
+  }
+
+  // NOVA ESTRATÉGIA: Sempre busca do servidor primeiro, cache como fallback
+  async getFromServerFirst<T>(
+    serverOperation: () => Promise<T>,
+    cacheOperation: () => Promise<T>,
+    updateCacheOperation?: (data: T) => Promise<void>
+  ): Promise<T> {
+    try {
+      // SEMPRE tenta servidor primeiro
+      if (navigator.onLine && window.electronAPI) {
+        console.log('📡 Buscando dados do servidor...');
+        const serverData = await serverOperation();
+        
+        // Atualiza o cache com os dados do servidor
+        if (updateCacheOperation) {
+          await updateCacheOperation(serverData);
+        }
+        
+        console.log('✅ Dados obtidos do servidor e cache atualizado');
+        return serverData;
+      } else {
+        throw new Error('Offline - usando cache');
+      }
+    } catch (error) {
+      console.warn('⚠️ Falha no servidor, usando cache:', error);
+      
+      // Usa cache como fallback
+      const cacheData = await cacheOperation();
+      console.log('📱 Dados obtidos do cache local');
+      
+      return cacheData;
+    }
   }
 
   // Métodos para Service Records
@@ -100,6 +193,32 @@ class CacheService {
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveMultipleServiceRecords(records: ServiceRecord[]): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['service_records'], 'readwrite');
+      const store = transaction.objectStore('service_records');
+      
+      let completed = 0;
+      const total = records.length;
+      
+      if (total === 0) {
+        resolve();
+        return;
+      }
+      
+      records.forEach(record => {
+        const request = store.put(record);
+        request.onsuccess = () => {
+          completed++;
+          if (completed === total) resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
     });
   }
 
@@ -144,6 +263,32 @@ class CacheService {
     });
   }
 
+  async saveMultipleAttachments(attachments: Attachment[]): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['attachments'], 'readwrite');
+      const store = transaction.objectStore('attachments');
+      
+      let completed = 0;
+      const total = attachments.length;
+      
+      if (total === 0) {
+        resolve();
+        return;
+      }
+      
+      attachments.forEach(attachment => {
+        const request = store.put(attachment);
+        request.onsuccess = () => {
+          completed++;
+          if (completed === total) resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    });
+  }
+
   async deleteAttachment(id: string): Promise<void> {
     if (!this.db) await this.init();
     
@@ -184,13 +329,40 @@ class CacheService {
     });
   }
 
+  async saveMultipleUsers(users: User[]): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['users'], 'readwrite');
+      const store = transaction.objectStore('users');
+      
+      let completed = 0;
+      const total = users.length;
+      
+      if (total === 0) {
+        resolve();
+        return;
+      }
+      
+      users.forEach(user => {
+        const request = store.put(user);
+        request.onsuccess = () => {
+          completed++;
+          if (completed === total) resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    });
+  }
+
   // Sync Queue Methods
-  async addToSyncQueue(item: Omit<SyncQueue, 'timestamp'>): Promise<void> {
+  async addToSyncQueue(item: Omit<SyncQueue, 'timestamp' | 'retries'>): Promise<void> {
     if (!this.db) await this.init();
     
     const syncItem: SyncQueue = {
       ...item,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      retries: 0
     };
 
     return new Promise((resolve, reject) => {
@@ -198,7 +370,12 @@ class CacheService {
       const store = transaction.objectStore('sync_queue');
       const request = store.put(syncItem);
 
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        resolve();
+        console.log('📤 Item adicionado à fila de sincronização:', item.type, item.table);
+        // Tenta processar a fila imediatamente
+        this.processSyncQueue().catch(console.error);
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -242,6 +419,29 @@ class CacheService {
     });
   }
 
+  async updateSyncItemRetries(id: string, retries: number): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['sync_queue'], 'readwrite');
+      const store = transaction.objectStore('sync_queue');
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = () => {
+        const item = getRequest.result;
+        if (item) {
+          item.retries = retries;
+          const putRequest = store.put(item);
+          putRequest.onsuccess = () => resolve();
+          putRequest.onerror = () => reject(putRequest.error);
+        } else {
+          resolve();
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
   // Metadata methods
   async setLastSyncTime(): Promise<void> {
     if (!this.db) await this.init();
@@ -269,73 +469,42 @@ class CacheService {
     });
   }
 
-  // Sync methods
-  async syncWithServer(): Promise<void> {
-    if (this.syncInProgress) return;
+  // NOVO: Processa fila de sincronização (mais eficiente)
+  async processSyncQueue(): Promise<void> {
+    if (this.syncInProgress) {
+      return;
+    }
     
-    this.syncInProgress = true;
-    console.log('🔄 Iniciando sincronização...');
-
-    try {
-      // 1. Baixar dados do servidor e salvar no cache
-      await this.downloadFromServer();
-      
-      // 2. Enviar alterações pendentes para o servidor
-      await this.uploadPendingChanges();
-      
-      // 3. Atualizar timestamp da última sincronização
-      await this.setLastSyncTime();
-      
-      console.log('✅ Sincronização concluída!');
-    } catch (error) {
-      console.error('❌ Erro na sincronização:', error);
-      throw error;
-    } finally {
-      this.syncInProgress = false;
+    if (!navigator.onLine || !window.electronAPI) {
+      console.log('🔄 Offline - aguardando conexão para sincronizar');
+      return;
     }
-  }
-
-  private async downloadFromServer(): Promise<void> {
-    try {
-      // Baixar service records
-      const serviceRecords = await window.electronAPI.getServiceRecords();
-      for (const record of serviceRecords) {
-        await this.saveServiceRecord(record);
-      }
-
-      // Baixar users
-      const users = await window.electronAPI.getUsers();
-      for (const user of users) {
-        await this.saveUser(user);
-      }
-
-      // Baixar attachments para cada service record
-      for (const record of serviceRecords) {
-        const attachments = await window.electronAPI.getAttachments(record.id);
-        for (const attachment of attachments) {
-          await this.saveAttachment(attachment);
-        }
-      }
-
-      console.log(`📥 Baixados: ${serviceRecords.length} atendimentos, ${users.length} usuários`);
-    } catch (error) {
-      console.error('Erro ao baixar dados do servidor:', error);
-      throw error;
-    }
-  }
-
-  private async uploadPendingChanges(): Promise<void> {
+    
     const syncQueue = await this.getSyncQueue();
     
     if (syncQueue.length === 0) {
-      console.log('📤 Nenhuma alteração pendente para sincronizar');
       return;
     }
 
-    console.log(`📤 Sincronizando ${syncQueue.length} alterações pendentes...`);
+    this.syncInProgress = true;
+    console.log(`🔄 Processando ${syncQueue.length} itens da fila de sincronização...`);
 
-    for (const item of syncQueue) {
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Ordena por timestamp para processar na ordem correta
+    const sortedQueue = syncQueue.sort((a, b) => a.timestamp - b.timestamp);
+
+    for (const item of sortedQueue) {
       try {
+        // Verifica se já tentou muitas vezes
+        if (item.retries >= 3) {
+          console.warn(`⚠️ Item ${item.id} excedeu limite de tentativas, removendo da fila`);
+          await this.removeSyncItem(item.id);
+          errorCount++;
+          continue;
+        }
+
         switch (item.table) {
           case 'service_records':
             await this.syncServiceRecord(item);
@@ -350,14 +519,32 @@ class CacheService {
         
         // Remove item da fila após sincronização bem-sucedida
         await this.removeSyncItem(item.id);
+        successCount++;
+        
+        console.log(`✅ Item ${item.id} sincronizado com sucesso`);
       } catch (error) {
-        console.error(`Erro ao sincronizar item ${item.id}:`, error);
-        // Não remove da fila para tentar novamente depois
+        console.error(`❌ Erro ao sincronizar item ${item.id}:`, error);
+        
+        // Incrementa contador de tentativas
+        await this.updateSyncItemRetries(item.id, item.retries + 1);
+        errorCount++;
       }
     }
+
+    console.log(`🔄 Sincronização concluída: ${successCount} sucessos, ${errorCount} erros`);
+    
+    if (successCount > 0) {
+      await this.setLastSyncTime();
+    }
+    
+    this.syncInProgress = false;
   }
 
   private async syncServiceRecord(item: SyncQueue): Promise<void> {
+    if (!window.electronAPI) {
+      throw new Error('ElectronAPI não disponível');
+    }
+
     switch (item.type) {
       case 'create':
         await window.electronAPI.addServiceRecord(item.data);
@@ -372,6 +559,10 @@ class CacheService {
   }
 
   private async syncAttachment(item: SyncQueue): Promise<void> {
+    if (!window.electronAPI) {
+      throw new Error('ElectronAPI não disponível');
+    }
+
     switch (item.type) {
       case 'create':
         await window.electronAPI.addAttachment(item.data);
@@ -383,6 +574,10 @@ class CacheService {
   }
 
   private async syncUser(item: SyncQueue): Promise<void> {
+    if (!window.electronAPI) {
+      throw new Error('ElectronAPI não disponível');
+    }
+
     switch (item.type) {
       case 'create':
         await window.electronAPI.addUser(item.data);
@@ -419,16 +614,36 @@ class CacheService {
     });
   }
 
-  // Verificar se precisa sincronizar
-  async needsSync(): Promise<boolean> {
+  // Verifica se há itens pendentes na fila de sincronização
+  async hasPendingSync(): Promise<boolean> {
+    const syncQueue = await this.getSyncQueue();
+    return syncQueue.length > 0;
+  }
+
+  // Método para verificar status da sincronização
+  async getSyncStatus(): Promise<{
+    lastSync: number | null;
+    pendingItems: number;
+    isOnline: boolean;
+  }> {
     const lastSync = await this.getLastSyncTime();
-    if (!lastSync) return true;
+    const syncQueue = await this.getSyncQueue();
+    const isOnline = navigator.onLine && !!window.electronAPI;
     
-    const now = Date.now();
-    const timeDiff = now - lastSync;
-    const maxAge = 10 * 60 * 1000; // 10 minutos
-    
-    return timeDiff > maxAge;
+    return {
+      lastSync,
+      pendingItems: syncQueue.length,
+      isOnline
+    };
+  }
+
+  // Cleanup quando o serviço é destruído
+  destroy(): void {
+    this.stopAutoSync();
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
   }
 }
 

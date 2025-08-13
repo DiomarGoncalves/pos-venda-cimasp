@@ -52,23 +52,34 @@ O sistema possui atualização automática integrada que:
 - Baixa atualizações em segundo plano
 - Notifica o usuário quando uma atualização está pronta
 - Permite instalação imediata ou adiada
-- Funciona através do GitHub Releases
+- Funciona através do GitHub Releases (via Electron Forge Publisher)
 
 ### Para Desenvolvedores
 
-Para publicar uma nova versão com auto-update:
+Para publicar uma nova versão:
 
 1. Atualize a versão no `package.json`
 2. Faça commit das mudanças
-3. Execute: `npm run dist` (publica automaticamente no GitHub)
-4. Ou use: `npm run publish` (através do Electron Forge)
+3. Execute: `npm run make` (gera os instaladores)
+4. Execute: `npm run publish` (publica no GitHub Releases)
+5. Ou use: `npm run make-and-publish` (faz tudo de uma vez)
 
 ### Configuração do GitHub
 
-1. Vá em Settings > Actions > General
-2. Habilite "Read and write permissions" para Actions
-3. Crie um Personal Access Token com permissões de repo
-4. Adicione como secret `GH_TOKEN` no repositório
+1. Crie um Personal Access Token no GitHub:
+   - Vá em https://github.com/settings/tokens
+   - Clique "Generate new token" → "Fine-grained token"
+   - Selecione o repositório do projeto
+   - Permissões: Contents (Read and Write), Metadata (Read-only)
+
+2. Configure o token no ambiente:
+   - Windows: `setx GITHUB_TOKEN "SEU_TOKEN_AQUI"`
+   - Linux/macOS: `export GITHUB_TOKEN="SEU_TOKEN_AQUI"`
+
+3. O Electron Forge irá automaticamente:
+   - Criar uma release no GitHub
+   - Anexar os instaladores gerados
+   - Gerar notas de release automaticamente
 
 ## Funcionalidades
 

@@ -1,7 +1,7 @@
 {
   "name": "pos-venda",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Sistema Controle Pos-Venda Cimasp",
   "author": "Diomar Gonçalves da Silva Neto",
   "main": "electron/main.js",
@@ -16,11 +16,11 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "make-and-publish": "electron-forge make && electron-forge publish",
     "build:electron": "npm run build && electron-builder --config electron-builder.yml",
     "dist": "npm run build && electron-builder --config electron-builder.yml --publish=always"
   },
   "dependencies": {
-    "@electron-forge/publisher-github": "^7.8.1",
     "better-sqlite3": "^11.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
@@ -57,6 +57,7 @@
     "@electron-forge/maker-zip": "^7.8.1",
     "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
     "@electron-forge/plugin-fuses": "^7.8.1",
+    "@electron-forge/publisher-github": "^7.8.3",
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^9.9.1",
     "@types/react": "^18.3.5",

@@ -8,6 +8,34 @@ export interface ElectronAPI {
   saveOfflineData: (key: string, data: any[]) => Promise<boolean>;
   appVersion: () => Promise<string>;
   isOnline: () => boolean;
+  
+  // Service Records
+  getServiceRecords: () => Promise<ServiceRecord[]>;
+  addServiceRecord: (record: any) => Promise<ServiceRecord>;
+  updateServiceRecord: (id: string, record: any) => Promise<boolean>;
+  deleteServiceRecord: (id: string) => Promise<boolean>;
+  
+  // Users
+  getUsers: () => Promise<User[]>;
+  addUser: (user: any) => Promise<User>;
+  
+  // Attachments
+  getAttachments: (serviceRecordId: string) => Promise<Attachment[]>;
+  addAttachment: (attachment: any) => Promise<Attachment>;
+  deleteAttachment: (id: string) => Promise<boolean>;
+  getAttachmentFile: (attachmentId: string) => Promise<{ buffer: ArrayBuffer; mimetype: string; filename: string } | null>;
+  
+  // Import/Export
+  importExcel: (filePath: string) => Promise<ServiceRecord[]>;
+  
+  // Update system
+  onUpdateAvailable?: (callback: () => void) => void;
+  onUpdateDownloaded?: (callback: () => void) => void;
+  onDownloadProgress?: (callback: (event: any, progress: any) => void) => void;
+  onUpdateError?: (callback: (event: any, error: string) => void) => void;
+  checkForUpdates?: () => void;
+  restartAppForUpdate?: () => void;
+  installUpdateNow?: () => void;
 }
 
 // Add ElectronAPI to the Window interface

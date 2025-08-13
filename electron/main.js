@@ -38,83 +38,107 @@ function getDatabaseUrl() {
 // Configuração da conexão com o banco Neon PostgreSQL
 const pool = new Pool({
   connectionString: getDatabaseUrl(),
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 10
 });
+
+// Função para testar conexão com o banco
+async function testDatabaseConnection() {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    console.log('✅ Conexão com banco de dados estabelecida');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro na conexão com banco de dados:', error);
+    return false;
+  }
+}
 
 // Função para criar tabelas se não existirem (executada uma vez)
 async function ensureTables() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS service_records (
-      id TEXT PRIMARY KEY,
-      order_number TEXT NOT NULL,
-      equipment TEXT NOT NULL,
-      chassis_plate TEXT,
-      client TEXT NOT NULL,
-      manufacturing_date TEXT,
-      call_opening_date TEXT NOT NULL,
-      technician TEXT NOT NULL,
-      assistance_type TEXT NOT NULL,
-      assistance_location TEXT,
-      contact_person TEXT,
-      phone TEXT,
-      reported_issue TEXT NOT NULL,
-      supplier TEXT,
-      part TEXT,
-      observations TEXT,
-      service_date TEXT,
-      responsible_technician TEXT,
-      part_labor_cost REAL DEFAULT 0,
-      travel_freight_cost REAL DEFAULT 0,
-      part_return TEXT,
-      supplier_warranty INTEGER DEFAULT 0,
-      technical_solution TEXT,
-      additional_costs TEXT, -- JSON string para custos adicionais
-      created_by TEXT REFERENCES users(id),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS attachments (
-      id TEXT PRIMARY KEY,
-      service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
-      filename TEXT NOT NULL,
-      url TEXT,
-      mimetype TEXT,
-      size INTEGER,
-      uploaded_by TEXT REFERENCES users(id),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS service_record_history (
-      id TEXT PRIMARY KEY,
-      service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
-      changed_by TEXT REFERENCES users(id),
-      change_type TEXT,
-      change_data TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_service_records_client ON service_records(client);
-    CREATE INDEX IF NOT EXISTS idx_service_records_technician ON service_records(technician);
-    CREATE INDEX IF NOT EXISTS idx_attachments_service_record_id ON attachments(service_record_id);
-  `);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS service_records (
+        id TEXT PRIMARY KEY,
+        order_number TEXT NOT NULL,
+        equipment TEXT NOT NULL,
+        chassis_plate TEXT,
+        client TEXT NOT NULL,
+        manufacturing_date TEXT,
+        call_opening_date TEXT NOT NULL,
+        technician TEXT NOT NULL,
+        assistance_type TEXT NOT NULL,
+        assistance_location TEXT,
+        contact_person TEXT,
+        phone TEXT,
+        reported_issue TEXT NOT NULL,
+        supplier TEXT,
+        part TEXT,
+        observations TEXT,
+        service_date TEXT,
+        responsible_technician TEXT,
+        part_labor_cost REAL DEFAULT 0,
+        travel_freight_cost REAL DEFAULT 0,
+        part_return TEXT,
+        supplier_warranty INTEGER DEFAULT 0,
+        technical_solution TEXT,
+        additional_costs TEXT, -- JSON string para custos adicionais
+        created_by TEXT REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS attachments (
+        id TEXT PRIMARY KEY,
+        service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
+        filename TEXT NOT NULL,
+        url TEXT,
+        mimetype TEXT,
+        size INTEGER,
+        uploaded_by TEXT REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS service_record_history (
+        id TEXT PRIMARY KEY,
+        service_record_id TEXT REFERENCES service_records(id) ON DELETE CASCADE,
+        changed_by TEXT REFERENCES users(id),
+        change_type TEXT,
+        change_data TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_service_records_client ON service_records(client);
+      CREATE INDEX IF NOT EXISTS idx_service_records_technician ON service_records(technician);
+      CREATE INDEX IF NOT EXISTS idx_attachments_service_record_id ON attachments(service_record_id);
+    `);
 
-  // Garante que a coluna file_data existe em attachments
-  await pool.query(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name='attachments' AND column_name='file_data'
-      ) THEN
-        ALTER TABLE attachments ADD COLUMN file_data BYTEA;
-      END IF;
-    END
-    $$;
-  `);
+    // Garante que a coluna file_data existe em attachments
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='attachments' AND column_name='file_data'
+        ) THEN
+          ALTER TABLE attachments ADD COLUMN file_data BYTEA;
+        END IF;
+      END
+      $$;
+    `);
+    
+    console.log('✅ Tabelas do banco de dados verificadas/criadas');
+  } catch (error) {
+    console.error('❌ Erro ao criar/verificar tabelas:', error);
+    throw error;
+  }
 }
 
 // Global reference to main window
@@ -242,7 +266,20 @@ function setupAutoUpdater() {
 }
 
 app.whenReady().then(async () => {
-  await ensureTables();
+  console.log('🚀 Aplicação iniciando...');
+  
+  // Testa conexão com banco antes de criar tabelas
+  const dbConnected = await testDatabaseConnection();
+  if (!dbConnected) {
+    console.error('❌ Não foi possível conectar ao banco de dados');
+    // Em produção, continua mesmo sem banco (modo offline)
+    if (!isDev) {
+      console.warn('⚠️ Continuando em modo offline');
+    }
+  } else {
+    await ensureTables();
+  }
+  
   createWindow();
 
   // INICIA O AUTO-UPDATER
@@ -254,148 +291,198 @@ app.whenReady().then(async () => {
 
   // IPC handlers para USERS
   ipcMain.handle('getUsers', async () => {
-    const { rows } = await pool.query('SELECT * FROM users');
-    return rows;
+    try {
+      const { rows } = await pool.query('SELECT * FROM users');
+      return rows;
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+      return [];
+    }
   });
 
   ipcMain.handle('addUser', async (event, user) => {
-    const id = uuidv4();
-    await pool.query(
-      'INSERT INTO users (id, username, password) VALUES ($1, $2, $3)',
-      [id, user.username, user.password]
-    );
-    return { id, ...user };
+    try {
+      const id = uuidv4();
+      await pool.query(
+        'INSERT INTO users (id, username, password) VALUES ($1, $2, $3)',
+        [id, user.username, user.password]
+      );
+      return { id, ...user };
+    } catch (error) {
+      console.error('Erro ao adicionar usuário:', error);
+      throw error;
+    }
   });
 
   // IPC handlers para SERVICE RECORDS
   ipcMain.handle('getServiceRecords', async () => {
-    const { rows } = await pool.query('SELECT * FROM service_records');
-    // Parse additional_costs JSON para cada registro
-    return rows.map(row => ({
-      ...row,
-      additional_costs: row.additional_costs ? JSON.parse(row.additional_costs) : []
-    }));
+    try {
+      const { rows } = await pool.query('SELECT * FROM service_records');
+      // Parse additional_costs JSON para cada registro
+      return rows.map(row => ({
+        ...row,
+        additional_costs: row.additional_costs ? JSON.parse(row.additional_costs) : []
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar registros de serviço:', error);
+      return [];
+    }
   });
 
   ipcMain.handle('addServiceRecord', async (event, record) => {
-    const id = uuidv4();
-    // Garante que created_by seja null se não enviado
-    const createdBy = record.created_by || null;
-    // Serializa custos adicionais como JSON
-    const additionalCosts = record.additional_costs ? JSON.stringify(record.additional_costs) : '[]';
-    await pool.query(`
-      INSERT INTO service_records (
-        id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
-        technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
-        supplier, part, observations, service_date, responsible_technician, part_labor_cost,
-        travel_freight_cost, part_return, supplier_warranty, technical_solution, additional_costs, created_by
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
-      )
-    `, [
-      id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manufacturing_date,
-      record.call_opening_date, record.technician, record.assistance_type, record.assistance_location,
-      record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
-      record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
-      record.travel_freight_cost, record.part_return, record.supplier_warranty, record.technical_solution,
-      additionalCosts,
-      createdBy
-    ]);
-    return { id, ...record, created_by: createdBy, additional_costs: record.additional_costs || [] };
+    try {
+      const id = uuidv4();
+      // Garante que created_by seja null se não enviado
+      const createdBy = record.created_by || null;
+      // Serializa custos adicionais como JSON
+      const additionalCosts = record.additional_costs ? JSON.stringify(record.additional_costs) : '[]';
+      await pool.query(`
+        INSERT INTO service_records (
+          id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
+          technician, assistance_type, assistance_location, contact_person, phone, reported_issue,
+          supplier, part, observations, service_date, responsible_technician, part_labor_cost,
+          travel_freight_cost, part_return, supplier_warranty, technical_solution, additional_costs, created_by
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+        )
+      `, [
+        id, record.order_number, record.equipment, record.chassis_plate, record.client, record.manufacturing_date,
+        record.call_opening_date, record.technician, record.assistance_type, record.assistance_location,
+        record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
+        record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
+        record.travel_freight_cost, record.part_return, record.supplier_warranty, record.technical_solution,
+        additionalCosts,
+        createdBy
+      ]);
+      return { id, ...record, created_by: createdBy, additional_costs: record.additional_costs || [] };
+    } catch (error) {
+      console.error('Erro ao adicionar registro de serviço:', error);
+      throw error;
+    }
   });
 
   ipcMain.handle('deleteServiceRecord', async (event, id) => {
-    await pool.query('DELETE FROM service_records WHERE id = $1', [id]);
-    return true;
+    try {
+      await pool.query('DELETE FROM service_records WHERE id = $1', [id]);
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar registro de serviço:', error);
+      return false;
+    }
   });
 
   ipcMain.handle('updateServiceRecord', async (event, id, updated) => {
-    // Corrige supplier_warranty para inteiro
-    if (typeof updated.supplier_warranty === 'boolean') {
-      updated.supplier_warranty = updated.supplier_warranty ? 1 : 0;
+    try {
+      // Corrige supplier_warranty para inteiro
+      if (typeof updated.supplier_warranty === 'boolean') {
+        updated.supplier_warranty = updated.supplier_warranty ? 1 : 0;
+      }
+      if (typeof updated.supplier_warranty === 'string') {
+        if (updated.supplier_warranty === 'true') updated.supplier_warranty = 1;
+        else if (updated.supplier_warranty === 'false') updated.supplier_warranty = 0;
+      }
+      
+      // Serializa custos adicionais como JSON
+      if (updated.additional_costs) {
+        updated.additional_costs = JSON.stringify(updated.additional_costs);
+      }
+      
+      const validFields = [
+        'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
+        'call_opening_date', 'technician', 'assistance_type', 'assistance_location',
+        'contact_person', 'phone', 'reported_issue', 'supplier', 'part', 'observations',
+        'service_date', 'responsible_technician', 'part_labor_cost', 'travel_freight_cost',
+        'part_return', 'supplier_warranty', 'technical_solution', 'additional_costs',
+        // Remover 'created_by' daqui
+        'created_at', 'updated_at'
+      ];
+      const fields = Object.keys(updated).filter(
+        k => k !== 'id' && validFields.includes(k)
+      );
+      if (fields.length === 0) return false;
+      const setClause = fields.map((field, idx) => `${field} = $${idx + 1}`).join(', ');
+      const values = fields.map(f => updated[f]);
+      values.push(id);
+      await pool.query(
+        `UPDATE service_records SET ${setClause} WHERE id = $${fields.length + 1}`,
+        values
+      );
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar registro de serviço:', error);
+      return false;
     }
-    if (typeof updated.supplier_warranty === 'string') {
-      if (updated.supplier_warranty === 'true') updated.supplier_warranty = 1;
-      else if (updated.supplier_warranty === 'false') updated.supplier_warranty = 0;
-    }
-    
-    // Serializa custos adicionais como JSON
-    if (updated.additional_costs) {
-      updated.additional_costs = JSON.stringify(updated.additional_costs);
-    }
-    
-    const validFields = [
-      'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
-      'call_opening_date', 'technician', 'assistance_type', 'assistance_location',
-      'contact_person', 'phone', 'reported_issue', 'supplier', 'part', 'observations',
-      'service_date', 'responsible_technician', 'part_labor_cost', 'travel_freight_cost',
-      'part_return', 'supplier_warranty', 'technical_solution', 'additional_costs',
-      // Remover 'created_by' daqui
-      'created_at', 'updated_at'
-    ];
-    const fields = Object.keys(updated).filter(
-      k => k !== 'id' && validFields.includes(k)
-    );
-    if (fields.length === 0) return false;
-    const setClause = fields.map((field, idx) => `${field} = $${idx + 1}`).join(', ');
-    const values = fields.map(f => updated[f]);
-    values.push(id);
-    await pool.query(
-      `UPDATE service_records SET ${setClause} WHERE id = $${fields.length + 1}`,
-      values
-    );
-    return true;
   });
 
   // IPC handlers para ATTACHMENTS
   ipcMain.handle('getAttachments', async (event, service_record_id) => {
-    const { rows } = await pool.query(
-      'SELECT * FROM attachments WHERE service_record_id = $1',
-      [service_record_id]
-    );
-    return rows;
+    try {
+      const { rows } = await pool.query(
+        'SELECT * FROM attachments WHERE service_record_id = $1',
+        [service_record_id]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Erro ao buscar anexos:', error);
+      return [];
+    }
   });
 
   ipcMain.handle('addAttachment', async (event, attachment) => {
-    const id = uuidv4();
-    // O buffer chega como array, converta para Buffer
-    const fileData = attachment.buffer ? Buffer.from(attachment.buffer) : null;
-    await pool.query(`
-      INSERT INTO attachments (
-        id, service_record_id, filename, url, mimetype, size, uploaded_by, file_data
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8
-      )
-    `, [
-      id,
-      attachment.service_record_id,
-      attachment.filename,
-      '', // url não é mais usada
-      attachment.mimetype,
-      attachment.size,
-      attachment.uploaded_by,
-      fileData
-    ]);
-    return { id, ...attachment };
+    try {
+      const id = uuidv4();
+      // O buffer chega como array, converta para Buffer
+      const fileData = attachment.buffer ? Buffer.from(attachment.buffer) : null;
+      await pool.query(`
+        INSERT INTO attachments (
+          id, service_record_id, filename, url, mimetype, size, uploaded_by, file_data
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8
+        )
+      `, [
+        id,
+        attachment.service_record_id,
+        attachment.filename,
+        '', // url não é mais usada
+        attachment.mimetype,
+        attachment.size,
+        attachment.uploaded_by,
+        fileData
+      ]);
+      return { id, ...attachment };
+    } catch (error) {
+      console.error('Erro ao adicionar anexo:', error);
+      throw error;
+    }
   });
 
   ipcMain.handle('deleteAttachment', async (event, id) => {
-    await pool.query('DELETE FROM attachments WHERE id = $1', [id]);
-    return true;
+    try {
+      await pool.query('DELETE FROM attachments WHERE id = $1', [id]);
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar anexo:', error);
+      return false;
+    }
   });
 
   // Novo handler para baixar o arquivo do anexo
   ipcMain.handle('getAttachmentFile', async (event, attachmentId) => {
-    const { rows } = await pool.query(
-      'SELECT file_data, mimetype, filename FROM attachments WHERE id = $1',
-      [attachmentId]
-    );
-    if (rows.length === 0) return null;
-    return {
-      buffer: rows[0].file_data,
-      mimetype: rows[0].mimetype,
-      filename: rows[0].filename
-    };
+    try {
+      const { rows } = await pool.query(
+        'SELECT file_data, mimetype, filename FROM attachments WHERE id = $1',
+        [attachmentId]
+      );
+      if (rows.length === 0) return null;
+      return {
+        buffer: rows[0].file_data,
+        mimetype: rows[0].mimetype,
+        filename: rows[0].filename
+      };
+    } catch (error) {
+      console.error('Erro ao buscar arquivo do anexo:', error);
+      return null;
+    }
   });
 
   ipcMain.handle('getStoreValue', (event, key) => {

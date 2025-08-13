@@ -333,7 +333,7 @@
   dependencies:
     "@electron-forge/shared-types" "7.8.3"
 
-"@electron-forge/publisher-github@^7.8.1":
+"@electron-forge/publisher-github@^7.8.3":
   version "7.8.3"
   resolved "https://registry.npmjs.org/@electron-forge/publisher-github/-/publisher-github-7.8.3.tgz"
   integrity sha512-hFZMDAWXkNrvJA/dA64m2+uLVz1cVyMbX94YXqu9zbW6sMWJzT96om1Gr+c1CnK+mmj5E/ZqVu0846Rq+rcfEQ==
