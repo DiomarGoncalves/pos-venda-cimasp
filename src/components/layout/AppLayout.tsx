@@ -42,17 +42,15 @@ export const AppLayout: React.FC = () => {
           await cacheService.init();
           
           // Verifica se precisa sincronizar
-          if (await cacheService.needsSync()) {
-            console.log('🔄 Sincronizando dados...');
-            try {
-              await cacheService.syncWithServer();
-            } catch (syncError) {
-              console.error('Erro na sincronização inicial:', syncError);
-              // Em produção, continua mesmo com erro de sincronização
-              setSyncStatus('error');
-              setTimeout(() => setSyncStatus('idle'), 5000);
-              return;
-            }
+          console.log('🔄 Sincronizando dados...');
+          try {
+            await cacheService.processSyncQueue();
+          } catch (syncError) {
+            console.error('Erro na sincronização inicial:', syncError);
+            // Em produção, continua mesmo com erro de sincronização
+            setSyncStatus('error');
+            setTimeout(() => setSyncStatus('idle'), 5000);
+            return;
           }
           
           setSyncStatus('idle');

@@ -73,10 +73,17 @@ class CacheService {
     }
     
     this.autoSyncInterval = setInterval(() => {
-      this.processSyncQueue().catch(error => {
-        console.warn('Auto-sync falhou:', error);
-      });
-    }, 10000); // 10 segundos - mais frequente
+      // Só executa auto-sync se não estiver já processando e houver itens na fila
+      if (!this.syncInProgress) {
+        this.getSyncQueue().then(queue => {
+          if (queue.length > 0) {
+            this.processSyncQueue().catch(error => {
+              console.warn('Auto-sync falhou:', error);
+            });
+          }
+        });
+      }
+    }, 30000); // 30 segundos - menos frequente para evitar spam
   }
 
   // Para a sincronização automática
@@ -373,8 +380,7 @@ class CacheService {
       request.onsuccess = () => {
         resolve();
         console.log('📤 Item adicionado à fila de sincronização:', item.type, item.table);
-        // Tenta processar a fila imediatamente
-        this.processSyncQueue().catch(console.error);
+        // NÃO processa automaticamente - evita duplicação
       };
       request.onerror = () => reject(request.error);
     });
@@ -618,6 +624,16 @@ class CacheService {
   async hasPendingSync(): Promise<boolean> {
     const syncQueue = await this.getSyncQueue();
     return syncQueue.length > 0;
+  }
+
+  // Verifica se precisa sincronizar (alias para hasPendingSync para compatibilidade)
+  async needsSync(): Promise<boolean> {
+    return await this.hasPendingSync();
+  }
+
+  // Alias para processSyncQueue para compatibilidade
+  async syncWithServer(): Promise<void> {
+    return await this.processSyncQueue();
   }
 
   // Método para verificar status da sincronização

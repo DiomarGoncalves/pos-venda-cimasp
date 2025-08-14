@@ -39,10 +39,34 @@ export const ServiceRecordDetailPage: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const serviceRecord = await getServiceRecordById(id);
+        // Tenta buscar o registro com retry em caso de falha
+        let serviceRecord = null;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!serviceRecord && attempts < maxAttempts) {
+          try {
+            serviceRecord = await getServiceRecordById(id);
+            if (!serviceRecord) {
+              // Se não encontrou, aguarda um pouco e tenta novamente
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              attempts++;
+            }
+          } catch (err) {
+            attempts++;
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+              throw err;
+            }
+          }
+        }
         
         if (!serviceRecord) {
-          throw new Error('Atendimento não encontrado');
+          // Se ainda não encontrou após as tentativas, redireciona para a lista
+          console.warn('Atendimento não encontrado após múltiplas tentativas:', id);
+          navigate('/service-records', { replace: true });
+          return;
         }
         
         setRecord(serviceRecord);
@@ -52,7 +76,9 @@ export const ServiceRecordDetailPage: React.FC = () => {
         setAttachments(recordAttachments);
       } catch (err) {
         console.error('Error loading service record:', err);
-        setError('Erro ao carregar os dados do atendimento');
+        // Em caso de erro, tenta redirecionar para a lista em vez de mostrar erro
+        console.warn('Redirecionando para lista devido ao erro:', err);
+        navigate('/service-records', { replace: true });
       } finally {
         setLoading(false);
       }
@@ -443,14 +469,14 @@ export const ServiceRecordDetailPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-start">
-                  {record.supplier_warranty ? (
+                  {(record.supplier_warranty === 1 || record.supplier_warranty === true) ? (
                     <Check className="h-5 w-5 text-green-600 mt-0.5 mr-2" />
                   ) : (
                     <X className="h-5 w-5 text-red-600 mt-0.5 mr-2" />
                   )}
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Garantia do Fornecedor</h3>
-                    <p className="mt-1">{record.supplier_warranty ? 'Sim' : 'Não'}</p>
+                    <p className="mt-1">{(record.supplier_warranty === 1 || record.supplier_warranty === true) ? 'Sim' : 'Não'}</p>
                   </div>
                 </div>
               </div>

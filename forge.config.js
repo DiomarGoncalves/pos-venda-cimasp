@@ -11,9 +11,7 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {
-        name: 'pos-venda'
-      },
+      config: {},
     },
     {
       name: '@electron-forge/maker-zip',
@@ -35,8 +33,8 @@ module.exports = {
           owner: 'DiomarGoncalves',
           name: 'pos-venda-cimasp',
         },
-        prerelease: false, // false para releases estáveis
-        draft: true, // true para criar rascunho e publicar manualmente depois
+        prerelease: true, // Mude para false quando quiser releases estáveis
+        draft: false,
         generateReleaseNotes: true,
       },
     },

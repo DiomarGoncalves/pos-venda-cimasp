@@ -7,20 +7,24 @@ export const signIn = async (username: string, password: string): Promise<User |
   try {
     console.log('[authService] signIn chamado:', { username, password });
     
-    // Busca usuários do cache primeiro
-    let users = await cacheService.getUsers();
+    // SEMPRE tenta buscar usuários do servidor primeiro
+    let users: any[] = [];
     
-    // Se não tem usuários no cache, busca do servidor
-    if (users.length === 0) {
+    if (navigator.onLine && window.electronAPI) {
+      console.log('📡 Buscando usuários do servidor...');
       try {
-        const serverUsers = await window.electronAPI.getUsers();
-        for (const user of serverUsers) {
-          await cacheService.saveUser(user);
-        }
-        users = serverUsers;
+        users = await window.electronAPI.getUsers();
+        
+        // Atualiza o cache com os usuários do servidor
+        await cacheService.saveMultipleUsers(users);
+        console.log('✅ Usuários obtidos do servidor e cache atualizado');
       } catch (error) {
-        console.error('Erro ao buscar usuários do servidor:', error);
+        console.warn('⚠️ Falha no servidor, usando cache:', error);
+        users = await cacheService.getUsers();
       }
+    } else {
+      console.log('📱 Offline - usando cache');
+      users = await cacheService.getUsers();
     }
     
     console.log('[authService] users recebidos:', users);
@@ -28,9 +32,12 @@ export const signIn = async (username: string, password: string): Promise<User |
     console.log('[authService] user encontrado:', user);
     if (!user) return null;
     
-    // Após login bem-sucedido, inicia sincronização completa
-    console.log('🔄 Iniciando sincronização após login...');
-    cacheService.syncWithServer().catch(console.error);
+    // Após login bem-sucedido, processa fila de sincronização se houver itens pendentes
+    const hasPending = await cacheService.hasPendingSync();
+    if (hasPending) {
+      console.log('🔄 Processando itens pendentes de sincronização...');
+      cacheService.processSyncQueue().catch(console.error);
+    }
     
     return {
       id: user.id,
@@ -58,28 +65,48 @@ export const signUp = async (username: string, password: string): Promise<User |
       createdAt: new Date().toISOString(),
     };
     
-    // Salva no cache local
-    await cacheService.saveUser(newUser);
-    
-    // Adiciona à fila de sincronização
-    await cacheService.addToSyncQueue({
-      id: uuidv4(),
-      type: 'create',
-      table: 'users',
-      data: { username, password }
-    });
-    
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-    
-    console.log('[authService] user criado:', newUser);
-    return {
-      id: newUser.id,
-      username: newUser.username,
-      name: newUser.name,
-      role: newUser.role,
-      createdAt: newUser.createdAt,
-    };
+    // SEMPRE tenta salvar no servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Criando usuário no servidor...');
+      try {
+        const serverUser = await window.electronAPI.addUser({ username, password });
+        
+        // Salva no cache após sucesso no servidor
+        await cacheService.saveUser(newUser);
+        console.log('✅ Usuário criado no servidor e cache atualizado');
+        
+        return {
+          id: newUser.id,
+          username: newUser.username,
+          name: newUser.name,
+          role: newUser.role,
+          createdAt: newUser.createdAt,
+        };
+      } catch (error) {
+        console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+        throw error; // Para registro, é melhor falhar se não conseguir criar no servidor
+      }
+    } else {
+      // Offline - salva no cache e adiciona à fila
+      await cacheService.saveUser(newUser);
+      
+      await cacheService.addToSyncQueue({
+        id: uuidv4(),
+        type: 'create',
+        table: 'users',
+        data: { username, password }
+      });
+      
+      console.log('📱 Usuário salvo no cache - será sincronizado quando possível');
+      
+      return {
+        id: newUser.id,
+        username: newUser.username,
+        name: newUser.name,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+      };
+    }
   } catch (error) {
     console.error('Sign up error:', error);
     throw error;

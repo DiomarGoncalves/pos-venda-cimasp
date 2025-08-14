@@ -102,6 +102,7 @@ export const ServiceRecordFormPage: React.FC = () => {
         technician: user?.name || '',
         createdBy: user?.id || '',
         manufacturingDate: '', // Garante campo vazio
+        supplierWarranty: false, // Garante valor booleano padrão
       } as any);
     }
   }, [id, navigate, reset, setValue, user]);
@@ -121,17 +122,27 @@ export const ServiceRecordFormPage: React.FC = () => {
 
       if (isEditing && id) {
         const { createdBy, ...updateData } = data;
-        savedRecord = await updateServiceRecord(id, {
+        // Garante que supplierWarranty seja convertido para inteiro
+        const processedData = {
           ...updateData,
           manufacturingDate,
           additional_costs: additionalCosts,
+          supplier_warranty: updateData.supplierWarranty ? 1 : 0,
+        };
+        savedRecord = await updateServiceRecord(id, {
+          ...processedData,
         } as ServiceRecord);
       } else {
-        savedRecord = await createServiceRecord({
+        // Garante que supplierWarranty seja convertido para inteiro
+        const processedData = {
           ...data,
           createdBy: user?.id || '',
           manufacturingDate,
           additional_costs: additionalCosts,
+          supplier_warranty: data.supplierWarranty ? 1 : 0,
+        };
+        savedRecord = await createServiceRecord({
+          ...processedData,
         });
       }
 
@@ -146,7 +157,10 @@ export const ServiceRecordFormPage: React.FC = () => {
         );
       }
 
-      navigate(`/service-records/${savedRecord.id}`);
+      // Aguarda um pouco para garantir que o registro esteja disponível
+      setTimeout(() => {
+        navigate(`/service-records/${savedRecord.id}`);
+      }, 500);
     } catch (error) {
       console.error('Error saving service record:', error);
       setSaveError('Erro ao salvar o atendimento. Tente novamente.');

@@ -37,6 +37,16 @@ function fillMissingFieldsSnakeCase(obj: any): any {
       }
     }
   }
+  
+  // Garante que supplier_warranty seja sempre um inteiro
+  if ('supplier_warranty' in filled) {
+    if (filled.supplier_warranty === true || filled.supplier_warranty === 1 || filled.supplier_warranty === '1' || filled.supplier_warranty === 'true') {
+      filled.supplier_warranty = 1;
+    } else {
+      filled.supplier_warranty = 0;
+    }
+  }
+  
   return filled;
 }
 
@@ -49,7 +59,26 @@ export const createServiceRecord = async (record: Omit<ServiceRecord, 'id' | 'cr
   };
 
   try {
-    // Salva no cache local primeiro
+    // SEMPRE tenta salvar no servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Salvando atendimento no servidor...');
+      const serverRecord = await window.electronAPI.addServiceRecord(fillMissingFieldsSnakeCase(toSnakeCase(newRecord)));
+      
+      // Salva no cache após sucesso no servidor
+      await cacheService.saveServiceRecord(newRecord);
+      console.log('✅ Atendimento salvo no servidor e cache atualizado');
+      
+      // Aguarda um pouco para garantir que o registro esteja disponível para busca
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      return newRecord;
+    } else {
+      throw new Error('Offline - salvando no cache');
+    }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+    
+    // Salva no cache como fallback
     await cacheService.saveServiceRecord(newRecord);
     
     // Adiciona à fila de sincronização
@@ -60,32 +89,41 @@ export const createServiceRecord = async (record: Omit<ServiceRecord, 'id' | 'cr
       data: fillMissingFieldsSnakeCase(toSnakeCase(newRecord))
     });
     
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-    
+    console.log('📱 Atendimento salvo no cache - será sincronizado quando possível');
     return newRecord;
-  } catch (error) {
-    console.error('Create service record error:', error);
-    throw error;
   }
 };
 
 export const getServiceRecords = async (filters?: Partial<ServiceRecord>): Promise<ServiceRecord[]> => {
   try {
-    // Tenta buscar do cache local primeiro
-    let records = await cacheService.getServiceRecords();
-    
-    // Se não tem dados no cache ou precisa sincronizar, busca do servidor
-    if (records.length === 0 || await cacheService.needsSync()) {
-      console.log('📡 Buscando dados do servidor...');
-      try {
-        await cacheService.syncWithServer();
-        records = await cacheService.getServiceRecords();
-      } catch (error) {
-        console.error('Erro ao sincronizar, usando dados do cache:', error);
-        // Usa dados do cache mesmo se a sincronização falhar
+    // SEMPRE tenta buscar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('📡 Buscando atendimentos do servidor...');
+      const serverRecords = await window.electronAPI.getServiceRecords();
+      
+      // Atualiza o cache com os dados do servidor
+      await cacheService.saveMultipleServiceRecords(serverRecords);
+      console.log('✅ Dados obtidos do servidor e cache atualizado');
+      
+      let records = serverRecords;
+      
+      if (filters) {
+        records = records.filter((record: any) =>
+          Object.entries(filters).every(
+            ([key, value]) => value === undefined || value === null || value === '' || record[key] === value
+          )
+        );
       }
+      return records;
+    } else {
+      throw new Error('Offline - usando cache');
     }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, usando cache:', error);
+    
+    // Usa cache como fallback
+    let records = await cacheService.getServiceRecords();
+    console.log('📱 Dados obtidos do cache local');
     
     if (filters) {
       records = records.filter((record: any) =>
@@ -95,47 +133,93 @@ export const getServiceRecords = async (filters?: Partial<ServiceRecord>): Promi
       );
     }
     return records;
-  } catch (error) {
-    console.error('Get service records error:', error);
-    return [];
   }
 };
 
 export const getServiceRecordById = async (id: string): Promise<ServiceRecord | null> => {
   try {
-    // Busca primeiro no cache local
-    let record = await cacheService.getServiceRecordById(id);
-    
-    // Se não encontrou no cache, tenta sincronizar e buscar novamente
-    if (!record) {
-      try {
-        await cacheService.syncWithServer();
-        record = await cacheService.getServiceRecordById(id);
-      } catch (error) {
-        console.error('Erro ao sincronizar:', error);
+    // SEMPRE tenta buscar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('📡 Buscando atendimento do servidor...');
+      const serverRecords = await window.electronAPI.getServiceRecords();
+      const record = serverRecords.find((r: any) => r.id === id);
+      
+      if (record) {
+        // Atualiza o cache com o registro encontrado
+        await cacheService.saveServiceRecord(record);
+        console.log('✅ Atendimento obtido do servidor e cache atualizado');
+        return record;
+      } else {
+        // Se não encontrou no servidor, tenta no cache
+        console.log('📱 Atendimento não encontrado no servidor, tentando cache...');
+        const cacheRecord = await cacheService.getServiceRecordById(id);
+        if (cacheRecord) {
+          console.log('✅ Atendimento encontrado no cache');
+          return cacheRecord;
+        }
       }
+      
+      return null;
+    } else {
+      throw new Error('Offline - usando cache');
     }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, usando cache:', error);
+    
+    // Usa cache como fallback
+    const record = await cacheService.getServiceRecordById(id);
+    console.log('📱 Atendimento obtido do cache local');
     
     return record;
-  } catch (error) {
-    console.error('Get service record by ID error:', error);
-    return null;
   }
 };
 
 export const updateServiceRecord = async (id: string, record: Partial<ServiceRecord>): Promise<ServiceRecord | null> => {
   try {
+    // SEMPRE tenta atualizar no servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Atualizando atendimento no servidor...');
+      
+      // Busca o registro atual do servidor
+      const serverRecords = await window.electronAPI.getServiceRecords();
+      const currentRecord = serverRecords.find((r: any) => r.id === id);
+      
+      if (!currentRecord) {
+        throw new Error('Registro não encontrado no servidor');
+      }
+      
+      // Atualiza o registro
+      const updated = { ...record, updatedAt: new Date().toISOString() };
+      const updatedRecord = { ...currentRecord, ...updated };
+      
+      // Atualiza no servidor
+      const success = await window.electronAPI.updateServiceRecord(id, fillMissingFieldsSnakeCase(toSnakeCase(updatedRecord)));
+      
+      if (success) {
+        // Atualiza o cache após sucesso no servidor
+        await cacheService.saveServiceRecord(updatedRecord);
+        console.log('✅ Atendimento atualizado no servidor e cache atualizado');
+        return updatedRecord;
+      } else {
+        throw new Error('Falha ao atualizar no servidor');
+      }
+    } else {
+      throw new Error('Offline - salvando no cache');
+    }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+    
     // Busca o registro atual do cache
     const currentRecord = await cacheService.getServiceRecordById(id);
     if (!currentRecord) {
       throw new Error('Registro não encontrado');
     }
     
-    // Atualiza o registro
+    // Atualiza o registro no cache
     const updated = { ...record, updatedAt: new Date().toISOString() };
     const updatedRecord = { ...currentRecord, ...updated };
     
-    // Salva no cache local
+    // Salva no cache
     await cacheService.saveServiceRecord(updatedRecord);
     
     // Adiciona à fila de sincronização
@@ -146,19 +230,33 @@ export const updateServiceRecord = async (id: string, record: Partial<ServiceRec
       data: fillMissingFieldsSnakeCase(toSnakeCase(updatedRecord))
     });
     
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-    
+    console.log('📱 Atendimento atualizado no cache - será sincronizado quando possível');
     return updatedRecord;
-  } catch (error) {
-    console.error('Update service record error:', error);
-    throw error;
   }
 };
 
 export const deleteServiceRecord = async (id: string): Promise<boolean> => {
   try {
-    // Remove do cache local
+    // SEMPRE tenta deletar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Deletando atendimento do servidor...');
+      const success = await window.electronAPI.deleteServiceRecord(id);
+      
+      if (success) {
+        // Remove do cache após sucesso no servidor
+        await cacheService.deleteServiceRecord(id);
+        console.log('✅ Atendimento deletado do servidor e cache atualizado');
+        return true;
+      } else {
+        throw new Error('Falha ao deletar do servidor');
+      }
+    } else {
+      throw new Error('Offline - salvando no cache');
+    }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+    
+    // Remove do cache
     await cacheService.deleteServiceRecord(id);
     
     // Adiciona à fila de sincronização
@@ -169,38 +267,34 @@ export const deleteServiceRecord = async (id: string): Promise<boolean> => {
       data: { id }
     });
     
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-    
+    console.log('📱 Atendimento marcado para exclusão - será sincronizado quando possível');
     return true;
-  } catch (error) {
-    console.error('Delete service record error:', error);
-    return false;
   }
 };
 
 // Função para buscar usuários (também com cache)
 export const getUsers = async (): Promise<any[]> => {
   try {
-    // Tenta buscar do cache local primeiro
-    let users = await cacheService.getUsers();
-    
-    // Se não tem dados no cache, busca do servidor
-    if (users.length === 0) {
-      try {
-        const serverUsers = await window.electronAPI.getUsers();
-        for (const user of serverUsers) {
-          await cacheService.saveUser(user);
-        }
-        users = serverUsers;
-      } catch (error) {
-        console.error('Erro ao buscar usuários do servidor:', error);
-      }
+    // SEMPRE tenta buscar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('📡 Buscando usuários do servidor...');
+      const serverUsers = await window.electronAPI.getUsers();
+      
+      // Atualiza o cache com os dados do servidor
+      await cacheService.saveMultipleUsers(serverUsers);
+      console.log('✅ Usuários obtidos do servidor e cache atualizado');
+      
+      return serverUsers;
+    } else {
+      throw new Error('Offline - usando cache');
     }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, usando cache:', error);
+    
+    // Usa cache como fallback
+    const users = await cacheService.getUsers();
+    console.log('📱 Usuários obtidos do cache local');
     
     return users;
-  } catch (error) {
-    console.error('Get users error:', error);
-    return [];
   }
 };

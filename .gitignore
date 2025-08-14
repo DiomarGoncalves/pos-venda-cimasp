@@ -27,14 +27,3 @@ dist-ssr
 
 out/
 Output/mysetup.exe
-
-# Electron Forge
-out/
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# GitHub token (nunca commitar)
-GITHUB_TOKEN

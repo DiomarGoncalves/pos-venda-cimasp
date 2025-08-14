@@ -205,7 +205,7 @@ export const SettingsPage: React.FC = () => {
   const handleForceSync = async () => {
     try {
       setSaving(true);
-      await cacheService.syncWithServer();
+      await cacheService.processSyncQueue();
       await loadCacheInfo();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

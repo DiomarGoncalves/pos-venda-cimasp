@@ -29,7 +29,24 @@ export const uploadAttachment = async (
       createdAt: new Date().toISOString(),
     };
 
-    // Salva no cache local
+
+    // SEMPRE tenta salvar no servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Salvando anexo no servidor...');
+      const serverAttachment = await window.electronAPI.addAttachment(attachmentData);
+      
+      // Salva no cache após sucesso no servidor
+      await cacheService.saveAttachment(newAttachment);
+      console.log('✅ Anexo salvo no servidor e cache atualizado');
+      
+      return newAttachment;
+    } else {
+      throw new Error('Offline - salvando no cache');
+    }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+    
+    // Salva no cache como fallback
     await cacheService.saveAttachment(newAttachment);
     
     // Adiciona à fila de sincronização
@@ -40,45 +57,59 @@ export const uploadAttachment = async (
       data: attachmentData
     });
     
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-
+    console.log('📱 Anexo salvo no cache - será sincronizado quando possível');
     return newAttachment;
-  } catch (error) {
-    console.error('Upload attachment error:', error);
-    throw error;
   }
 };
 
 export const getAttachments = async (serviceRecordId: string): Promise<Attachment[]> => {
   try {
-    // Busca primeiro no cache local
-    let attachments = await cacheService.getAttachments(serviceRecordId);
-    
-    // Se não tem dados no cache ou precisa sincronizar, busca do servidor
-    if (attachments.length === 0 || await cacheService.needsSync()) {
-      try {
-        const serverAttachments = await window.electronAPI.getAttachments(serviceRecordId);
-        for (const attachment of serverAttachments) {
-          await cacheService.saveAttachment(attachment);
-        }
-        attachments = serverAttachments;
-      } catch (error) {
-        console.error('Erro ao buscar anexos do servidor:', error);
-        // Usa dados do cache mesmo se a sincronização falhar
-      }
+    // SEMPRE tenta buscar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('📡 Buscando anexos do servidor...');
+      const serverAttachments = await window.electronAPI.getAttachments(serviceRecordId);
+      
+      // Atualiza o cache com os dados do servidor
+      await cacheService.saveMultipleAttachments(serverAttachments);
+      console.log('✅ Anexos obtidos do servidor e cache atualizado');
+      
+      return serverAttachments;
+    } else {
+      throw new Error('Offline - usando cache');
     }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, usando cache:', error);
+    
+    // Usa cache como fallback
+    const attachments = await cacheService.getAttachments(serviceRecordId);
+    console.log('📱 Anexos obtidos do cache local');
     
     return attachments;
-  } catch (error) {
-    console.error('Get attachments error:', error);
-    return [];
   }
 };
 
 export const deleteAttachment = async (id: string): Promise<boolean> => {
   try {
-    // Remove do cache local
+    // SEMPRE tenta deletar do servidor primeiro
+    if (navigator.onLine && window.electronAPI) {
+      console.log('💾 Deletando anexo do servidor...');
+      const success = await window.electronAPI.deleteAttachment(id);
+      
+      if (success) {
+        // Remove do cache após sucesso no servidor
+        await cacheService.deleteAttachment(id);
+        console.log('✅ Anexo deletado do servidor e cache atualizado');
+        return true;
+      } else {
+        throw new Error('Falha ao deletar do servidor');
+      }
+    } else {
+      throw new Error('Offline - salvando no cache');
+    }
+  } catch (error) {
+    console.warn('⚠️ Falha no servidor, salvando no cache:', error);
+    
+    // Remove do cache
     await cacheService.deleteAttachment(id);
     
     // Adiciona à fila de sincronização
@@ -89,13 +120,8 @@ export const deleteAttachment = async (id: string): Promise<boolean> => {
       data: { id }
     });
     
-    // Tenta sincronizar imediatamente (em background)
-    cacheService.syncWithServer().catch(console.error);
-    
+    console.log('📱 Anexo marcado para exclusão - será sincronizado quando possível');
     return true;
-  } catch (error) {
-    console.error('Delete attachment error:', error);
-    return false;
   }
 };
 

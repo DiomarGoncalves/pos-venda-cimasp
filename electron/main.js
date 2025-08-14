@@ -336,6 +336,15 @@ app.whenReady().then(async () => {
       const createdBy = record.created_by || null;
       // Serializa custos adicionais como JSON
       const additionalCosts = record.additional_costs ? JSON.stringify(record.additional_costs) : '[]';
+      
+      // Converte supplier_warranty para inteiro
+      let supplierWarranty = 0;
+      if (record.supplier_warranty === true || record.supplier_warranty === 1 || record.supplier_warranty === '1' || record.supplier_warranty === 'true') {
+        supplierWarranty = 1;
+      } else if (record.supplier_warranty === false || record.supplier_warranty === 0 || record.supplier_warranty === '0' || record.supplier_warranty === 'false') {
+        supplierWarranty = 0;
+      }
+      
       await pool.query(`
         INSERT INTO service_records (
           id, order_number, equipment, chassis_plate, client, manufacturing_date, call_opening_date,
@@ -350,11 +359,11 @@ app.whenReady().then(async () => {
         record.call_opening_date, record.technician, record.assistance_type, record.assistance_location,
         record.contact_person, record.phone, record.reported_issue, record.supplier, record.part,
         record.observations, record.service_date, record.responsible_technician, record.part_labor_cost,
-        record.travel_freight_cost, record.part_return, record.supplier_warranty, record.technical_solution,
+        record.travel_freight_cost, record.part_return, supplierWarranty, record.technical_solution,
         additionalCosts,
         createdBy
       ]);
-      return { id, ...record, created_by: createdBy, additional_costs: record.additional_costs || [] };
+      return { id, ...record, created_by: createdBy, supplier_warranty: supplierWarranty, additional_costs: record.additional_costs || [] };
     } catch (error) {
       console.error('Erro ao adicionar registro de serviço:', error);
       throw error;
@@ -373,13 +382,15 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('updateServiceRecord', async (event, id, updated) => {
     try {
-      // Corrige supplier_warranty para inteiro
-      if (typeof updated.supplier_warranty === 'boolean') {
-        updated.supplier_warranty = updated.supplier_warranty ? 1 : 0;
-      }
-      if (typeof updated.supplier_warranty === 'string') {
-        if (updated.supplier_warranty === 'true') updated.supplier_warranty = 1;
-        else if (updated.supplier_warranty === 'false') updated.supplier_warranty = 0;
+      // Converte supplier_warranty para inteiro de forma mais robusta
+      if ('supplier_warranty' in updated) {
+        let supplierWarranty = 0;
+        if (updated.supplier_warranty === true || updated.supplier_warranty === 1 || updated.supplier_warranty === '1' || updated.supplier_warranty === 'true') {
+          supplierWarranty = 1;
+        } else if (updated.supplier_warranty === false || updated.supplier_warranty === 0 || updated.supplier_warranty === '0' || updated.supplier_warranty === 'false') {
+          supplierWarranty = 0;
+        }
+        updated.supplier_warranty = supplierWarranty;
       }
       
       // Serializa custos adicionais como JSON
