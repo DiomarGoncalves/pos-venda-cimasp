@@ -1,0 +1,58 @@
+appId: com.alphadevss.pos-venda
+productName: Sistema Controle Pos-Venda
+copyright: Copyright © 2024 AlphaDevss
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - "dist/**/*"
+  - "electron/**/*"
+  - "node_modules/**/*"
+  - "package.json"
+  - "app-update.yml"
+
+extraResources:
+  - "src/assets/**/*"
+  - "app-update.yml"
+
+mac:
+  category: public.app-category.business
+  icon: src/assets/favicon.ico
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+
+win:
+  icon: src/assets/favicon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+  publisherName: AlphaDevss
+  verifyUpdateCodeSignature: false
+
+linux:
+  icon: src/assets/favicon.ico
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Office
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+publish:
+  provider: github
+  owner: DiomarGoncalves
+  repo: pos-venda-cimasp
+  private: false
+  releaseType: prerelease
+
+autoUpdater:
+  provider: github
+  owner: DiomarGoncalves
+  repo: pos-venda-cimasp

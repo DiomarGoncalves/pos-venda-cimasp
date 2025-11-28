@@ -12,7 +12,7 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
 import { Button } from '../components/ui/Button';
-import { ServiceRecord } from '../types';
+import { ServiceRecord, AdditionalCost } from '../types';
 import { 
   createServiceRecord, 
   getServiceRecordById, 
@@ -21,7 +21,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { FileUpload } from '../components/ui/FileUpload';
 import { uploadAttachment } from '../services/attachmentService';
-import { ChevronLeft, Save } from 'lucide-react';
+import { ChevronLeft, Save, Plus, X } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 export const ServiceRecordFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,7 @@ export const ServiceRecordFormPage: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [additionalCosts, setAdditionalCosts] = useState<AdditionalCost[]>([]);
   
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ServiceRecord>();
 
@@ -48,6 +50,11 @@ export const ServiceRecordFormPage: React.FC = () => {
             if (manufacturingDate && manufacturingDate.length > 10) {
               manufacturingDate = manufacturingDate.slice(0, 10);
             }
+            
+            // Carrega custos adicionais
+            const costs = record.additional_costs || [];
+            setAdditionalCosts(costs);
+            
             reset({
               id: record.id,
               orderNumber: record.orderNumber ?? record.order_number ?? '',
@@ -95,6 +102,7 @@ export const ServiceRecordFormPage: React.FC = () => {
         technician: user?.name || '',
         createdBy: user?.id || '',
         manufacturingDate: '', // Garante campo vazio
+        supplierWarranty: false, // Garante valor booleano padrão
       } as any);
     }
   }, [id, navigate, reset, setValue, user]);
@@ -114,15 +122,27 @@ export const ServiceRecordFormPage: React.FC = () => {
 
       if (isEditing && id) {
         const { createdBy, ...updateData } = data;
-        savedRecord = await updateServiceRecord(id, {
+        // Garante que supplierWarranty seja convertido para inteiro
+        const processedData = {
           ...updateData,
           manufacturingDate,
+          additional_costs: additionalCosts,
+          supplier_warranty: updateData.supplierWarranty ? 1 : 0,
+        };
+        savedRecord = await updateServiceRecord(id, {
+          ...processedData,
         } as ServiceRecord);
       } else {
-        savedRecord = await createServiceRecord({
+        // Garante que supplierWarranty seja convertido para inteiro
+        const processedData = {
           ...data,
           createdBy: user?.id || '',
           manufacturingDate,
+          additional_costs: additionalCosts,
+          supplier_warranty: data.supplierWarranty ? 1 : 0,
+        };
+        savedRecord = await createServiceRecord({
+          ...processedData,
         });
       }
 
@@ -137,7 +157,10 @@ export const ServiceRecordFormPage: React.FC = () => {
         );
       }
 
-      navigate(`/service-records/${savedRecord.id}`);
+      // Aguarda um pouco para garantir que o registro esteja disponível
+      setTimeout(() => {
+        navigate(`/service-records/${savedRecord.id}`);
+      }, 500);
     } catch (error) {
       console.error('Error saving service record:', error);
       setSaveError('Erro ao salvar o atendimento. Tente novamente.');
@@ -148,6 +171,25 @@ export const ServiceRecordFormPage: React.FC = () => {
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
+  };
+
+  const addAdditionalCost = () => {
+    const newCost: AdditionalCost = {
+      id: uuidv4(),
+      description: '',
+      amount: 0
+    };
+    setAdditionalCosts([...additionalCosts, newCost]);
+  };
+
+  const removeAdditionalCost = (id: string) => {
+    setAdditionalCosts(additionalCosts.filter(cost => cost.id !== id));
+  };
+
+  const updateAdditionalCost = (id: string, field: 'description' | 'amount', value: string | number) => {
+    setAdditionalCosts(additionalCosts.map(cost => 
+      cost.id === id ? { ...cost, [field]: value } : cost
+    ));
   };
 
   const assistanceTypeOptions = [
@@ -363,6 +405,55 @@ export const ServiceRecordFormPage: React.FC = () => {
                 label="Solução Técnica"
                 {...register('technicalSolution')}
               />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Custos Adicionais</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addAdditionalCost}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Custo
+                  </Button>
+                </div>
+                
+                {additionalCosts.length > 0 && (
+                  <div className="space-y-3">
+                    {additionalCosts.map((cost) => (
+                      <div key={cost.id} className="flex items-center gap-3 p-3 border rounded-md bg-gray-50">
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Descrição do custo"
+                            value={cost.description}
+                            onChange={(e) => updateAdditionalCost(cost.id, 'description', e.target.value)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={cost.amount}
+                            onChange={(e) => updateAdditionalCost(cost.id, 'amount', parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeAdditionalCost(cost.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 

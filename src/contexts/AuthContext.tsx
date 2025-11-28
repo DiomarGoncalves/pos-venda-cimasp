@@ -27,11 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const loadUser = async () => {
+      setLoading(true);
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
       } catch (err) {
-        setError('Failed to load user session');
         console.error('Error loading user:', err);
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError('Usuário ou senha inválidos');
     }
     setLoading(false);
-    return result; // importante para o LoginForm saber se foi sucesso ou não
+    return result;
   };
 
   const register = async (username: string, password: string) => {
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError('Erro ao registrar usuário');
     }
     setLoading(false);
-    return result; // importante para o RegisterForm saber se foi sucesso ou não
+    return result;
   };
 
   const logout = () => {

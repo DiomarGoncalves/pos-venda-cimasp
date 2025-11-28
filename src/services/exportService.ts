@@ -68,7 +68,7 @@ export const exportToExcel = async (
       partLaborCost: record.part_labor_cost,
       travelFreightCost: record.travel_freight_cost,
       partReturn: record.part_return,
-      supplierWarranty: record.supplier_warranty ? 'SIM' : 'NÃO',
+      supplierWarranty: (record.supplier_warranty === 1 || record.supplier_warranty === true) ? 'SIM' : 'NÃO',
       technicalSolution: record.technical_solution
     });
   });
@@ -164,7 +164,7 @@ export const importFromExcel = async (file: File): Promise<ServiceRecord[]> => {
         value = typeof value === 'number' ? value : parseFloat(value?.toString() || '0');
       }
       if (key === 'supplier_warranty') {
-        value = (cell.text || '').toUpperCase() === 'SIM';
+        value = (cell.text || '').toString().toUpperCase() === 'SIM' ? 1 : 0;
       }
       rowData[key] = value ?? '';
     });

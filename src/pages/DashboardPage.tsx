@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { 
-  Users, 
-  ClipboardList, 
-  Clock, 
+import {
+  Users,
+  ClipboardList,
+  Clock,
   CheckCircle,
   Calendar
 } from 'lucide-react';
@@ -22,14 +22,14 @@ export const DashboardPage: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        let records = await getServiceRecords();
+        const { records } = await getServiceRecords(1, 1000); // Fetch recent records, limit to 1000 for dashboard stats
         // Ordena por call_opening_date decrescente (mais recente primeiro)
-        records = records.sort((a, b) => {
+        const sortedRecords = records.sort((a, b) => {
           const dateA = new Date(a.call_opening_date).getTime();
           const dateB = new Date(b.call_opening_date).getTime();
           return dateB - dateA;
         });
-        setServiceRecords(records);
+        setServiceRecords(sortedRecords);
       } catch (err) {
         console.error('Error loading service records:', err);
         setError('Falha ao carregar os dados. Tente novamente mais tarde.');
@@ -107,7 +107,7 @@ export const DashboardPage: React.FC = () => {
         </Link>
       </div>
 
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         variants={containerVariants}
         initial="hidden"
@@ -175,10 +175,11 @@ export const DashboardPage: React.FC = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {serviceRecords.filter(r => {
+                  if (!r.service_date) return false;
                   const date = new Date(r.service_date);
                   const now = new Date();
-                  return date.getMonth() === now.getMonth() && 
-                         date.getFullYear() === now.getFullYear();
+                  return date.getMonth() === now.getMonth() &&
+                    date.getFullYear() === now.getFullYear();
                 }).length}
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -199,8 +200,8 @@ export const DashboardPage: React.FC = () => {
               {recentRecords.length > 0 ? (
                 <div className="space-y-2">
                   {recentRecords.map((record) => (
-                    <Link 
-                      key={record.id} 
+                    <Link
+                      key={record.id}
                       to={`/service-records/${record.id}`}
                       className="block"
                     >
@@ -213,11 +214,10 @@ export const DashboardPage: React.FC = () => {
                             <p className="text-sm text-gray-600">{record.client}</p>
                           </div>
                           <div className="text-right">
-                            <span className={`text-xs pxflex justify-between items-start-2 py-1 rounded-full ${
-                              record.service_date 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-orange-100 text-orange-800'
-                            }`}>
+                            <span className={`text-xs px-2 py-1 rounded-full ${record.service_date
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-orange-100 text-orange-800'
+                              }`}>
                               {record.service_date ? 'Concluído' : 'Pendente'}
                             </span>
                             <p className="text-xs text-gray-500 mt-1">
@@ -236,7 +236,7 @@ export const DashboardPage: React.FC = () => {
                   Nenhum atendimento registrado ainda
                 </div>
               )}
-              
+
               <div className="mt-4 flex justify-center">
                 <Link to="/service-records">
                   <Button variant="outline">Ver Todos os Atendimentos</Button>

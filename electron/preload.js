@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // USERS
   getUsers: () => ipcRenderer.invoke('getUsers'),
   addUser: (user) => ipcRenderer.invoke('addUser', user),
+  validateUser: (username, password) => ipcRenderer.invoke('validateUser', username, password),
 
   // SERVICE RECORDS
   getServiceRecords: () => ipcRenderer.invoke('getServiceRecords'),
@@ -15,21 +16,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAttachments: (service_record_id) => ipcRenderer.invoke('getAttachments', service_record_id),
   addAttachment: (attachment) => ipcRenderer.invoke('addAttachment', attachment),
   deleteAttachment: (id) => ipcRenderer.invoke('deleteAttachment', id),
-  saveAttachmentFile: (data) => ipcRenderer.invoke('saveAttachmentFile', data),
-  openAttachmentFile: (filePath) => ipcRenderer.invoke('openAttachmentFile', filePath),
   getAttachmentFile: (attachmentId) => ipcRenderer.invoke('getAttachmentFile', attachmentId),
 
   // SETTINGS
   getStoreValue: (key) => ipcRenderer.invoke('getStoreValue', key),
   setStoreValue: (key, value) => ipcRenderer.invoke('setStoreValue', key, value),
 
-  // IMPORTAÇÃO DE EXCEL (opcional, se quiser processar no backend)
+  // IMPORT
   importExcel: (filePath) => ipcRenderer.invoke('importExcel', filePath),
-
-  // Atualização automática
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
-  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
-  restartAppForUpdate: () => ipcRenderer.send('restart-app-for-update'),
-
-  // Adicione outros métodos conforme necessário
 });

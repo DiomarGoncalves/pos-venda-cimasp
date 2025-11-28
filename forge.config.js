@@ -2,7 +2,16 @@
 module.exports = {
   packagerConfig: {
     icon: 'src/assets/favicon',
-    name: 'pos-venda', // Adicione esta linha para garantir nome curto
+    name: 'pos-venda',
+    ignore: [
+      /^\/out/,
+      /^\/\.git/,
+      /^\/\.vscode/,
+      /^\/src/, // Vite builds to dist, so src is not needed in prod
+      /^\/node_modules\/\.bin/,
+      /\.exe$/,
+      /\.zip$/,
+    ],
   },
   rebuildConfig: {},
   makers: [
@@ -20,19 +29,6 @@ module.exports = {
     {
       name: '@electron-forge/maker-rpm',
       config: {},
-    },
-  ],
-  publishers: [
-    {
-      name: '@electron-forge/publisher-github',
-      config: {
-        repository: {
-          owner: 'DiomarGoncalves',
-          name: 'pos-venda-cimasp',
-        },
-        prerelease: false,
-        draft: false,
-      },
     },
   ],
 };

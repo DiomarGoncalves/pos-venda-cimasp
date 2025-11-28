@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
+import {
+  Card,
+  CardHeader,
+  CardTitle,
   CardContent,
   CardDescription
 } from '../components/ui/Card';
@@ -12,9 +12,9 @@ import { Input } from '../components/ui/Input';
 import { getServiceRecords } from '../services/serviceRecordService';
 import { downloadExcel, importFromExcel } from '../services/exportService';
 import { ServiceRecord } from '../types';
-import { 
-  FileDown, 
-  FilterIcon, 
+import {
+  FileDown,
+  FilterIcon,
   RefreshCw,
   BarChart3,
   PieChart,
@@ -64,9 +64,9 @@ async function exportResumoExcel(records: ServiceRecord[], filename = 'lista-res
       equipment: record.equipment,
       call_opening_date: record.call_opening_date && record.call_opening_date.length >= 10
         ? (() => {
-            const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
-            return `${day}/${month}/${year}`;
-          })()
+          const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
+          return `${day}/${month}/${year}`;
+        })()
         : record.call_opening_date || '',
       technician: record.technician,
       status: record.service_date ? 'Concluído' : 'Pendente',
@@ -106,7 +106,7 @@ export const ReportsPage: React.FC = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   // Filters
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -129,16 +129,17 @@ export const ReportsPage: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        let data = await getServiceRecords();
+        setLoading(true);
+        const { records } = await getServiceRecords(1, 1000); // Fetch up to 1000 records for reports
         // Ordena por call_opening_date decrescente (mais recente primeiro)
-        data = data.sort((a, b) => {
+        const sortedRecords = records.sort((a, b) => {
           const dateA = new Date(a.call_opening_date).getTime();
           const dateB = new Date(b.call_opening_date).getTime();
           return dateB - dateA;
         });
-        setRecords(data);
-        setFilteredRecords(data);
-        calculateStats(data);
+        setRecords(sortedRecords);
+        setFilteredRecords(sortedRecords);
+        calculateStats(sortedRecords);
       } catch (err) {
         console.error('Error loading service records:', err);
         setError('Falha ao carregar os dados. Tente novamente mais tarde.');
@@ -157,9 +158,9 @@ export const ReportsPage: React.FC = () => {
     const totalCost = data.reduce((sum, record) => {
       return sum + (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
     }, 0);
-    
+
     const averageCost = data.length > 0 ? totalCost / data.length : 0;
-    
+
     setStats({
       totalRecords: data.length,
       pendingRecords,
@@ -171,7 +172,7 @@ export const ReportsPage: React.FC = () => {
 
   const applyFilters = () => {
     let filtered = [...records];
-    
+
     if (dateFrom) {
       filtered = filtered.filter(r => {
         const recordDate = new Date(r.call_opening_date);
@@ -179,7 +180,7 @@ export const ReportsPage: React.FC = () => {
         return recordDate >= fromDate;
       });
     }
-    
+
     if (dateTo) {
       filtered = filtered.filter(r => {
         const recordDate = new Date(r.call_opening_date);
@@ -189,23 +190,23 @@ export const ReportsPage: React.FC = () => {
         return recordDate <= toDate;
       });
     }
-    
+
     if (client) {
-      filtered = filtered.filter(r => 
+      filtered = filtered.filter(r =>
         r.client.toLowerCase().includes(client.toLowerCase())
       );
     }
-    
+
     if (technician) {
-      filtered = filtered.filter(r => 
+      filtered = filtered.filter(r =>
         r.technician.toLowerCase().includes(technician.toLowerCase())
       );
     }
-    
+
     if (assistanceType) {
       filtered = filtered.filter(r => r.assistanceType === assistanceType);
     }
-    
+
     if (status) {
       if (status === 'pending') {
         filtered = filtered.filter(r => !r.serviceDate);
@@ -213,7 +214,7 @@ export const ReportsPage: React.FC = () => {
         filtered = filtered.filter(r => !!r.serviceDate);
       }
     }
-    
+
     // Ordena novamente após filtrar
     filtered = filtered.sort((a, b) => {
       const dateA = new Date(a.call_opening_date).getTime();
@@ -239,7 +240,7 @@ export const ReportsPage: React.FC = () => {
     try {
       setExporting(true);
       await downloadExcel(
-        filteredRecords, 
+        filteredRecords,
         `relatorio-atendimentos-${new Date().toISOString().split('T')[0]}.xlsx`
       );
     } catch (err) {
@@ -261,10 +262,10 @@ export const ReportsPage: React.FC = () => {
       const imported = await importFromExcel(file);
       setImportSuccess(`${imported.length} registros importados com sucesso!`);
       // Atualiza a lista
-      const data = await getServiceRecords();
-      setRecords(data);
-      setFilteredRecords(data);
-      calculateStats(data);
+      const { records } = await getServiceRecords(1, 1000);
+      setRecords(records);
+      setFilteredRecords(records);
+      calculateStats(records);
     } catch (err: any) {
       setImportError('Erro ao importar planilha: ' + (err?.message || ''));
     } finally {
@@ -383,7 +384,7 @@ export const ReportsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={handleExport}
             isLoading={exporting}
             disabled={filteredRecords.length === 0}
@@ -500,28 +501,28 @@ export const ReportsPage: React.FC = () => {
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
-            
+
             <Input
               label="Data Final"
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
             />
-            
+
             <Select
               label="Cliente"
               value={client}
               onChange={(e) => setClient(e.target.value)}
               options={clients.map(c => ({ value: c, label: c }))}
             />
-            
+
             <Select
               label="Técnico"
               value={technician}
               onChange={(e) => setTechnician(e.target.value)}
               options={technicians.map(t => ({ value: t, label: t }))}
             />
-            
+
             <Select
               label="Tipo de Assistência"
               value={assistanceType}
@@ -532,7 +533,7 @@ export const ReportsPage: React.FC = () => {
                 { value: 'NÃO PROCEDE', label: 'Não Procede' },
               ]}
             />
-            
+
             <Select
               label="Status"
               value={status}
@@ -544,7 +545,7 @@ export const ReportsPage: React.FC = () => {
               ]}
             />
           </div>
-          
+
           <div className="flex justify-end mt-6 space-x-2">
             <Button
               type="button"
@@ -615,26 +616,30 @@ export const ReportsPage: React.FC = () => {
                         {/* Exibe a data manualmente, sem new Date para evitar problemas de timezone */}
                         {record.call_opening_date && record.call_opening_date.length >= 10
                           ? (() => {
-                              const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
-                              return `${day}/${month}/${year}`;
-                            })()
+                            const [year, month, day] = record.call_opening_date.slice(0, 10).split('-');
+                            return `${day}/${month}/${year}`;
+                          })()
                           : record.call_opening_date || ''}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {record.technician}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          record.service_date
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${record.service_date
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-orange-100 text-orange-800'
+                          }`}>
                           {record.service_date ? 'Concluído' : 'Pendente'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatCurrencyBR(
-                          (record.part_labor_cost || 0) + (record.travel_freight_cost || 0)
+                          (() => {
+                            const baseCosts = (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
+                            const additionalCosts = record.additional_costs ?
+                              record.additional_costs.reduce((sum, cost) => sum + cost.amount, 0) : 0;
+                            return baseCosts + additionalCosts;
+                          })()
                         )}
                       </td>
                     </tr>

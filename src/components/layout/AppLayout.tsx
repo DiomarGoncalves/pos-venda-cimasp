@@ -12,7 +12,6 @@ export const AppLayout: React.FC = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
-    // Redirect to login if user is not authenticated
     if (!loading && !user) {
       navigate('/login');
     }
@@ -30,7 +29,6 @@ export const AppLayout: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Display loading spinner while checking auth status
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50">
@@ -42,7 +40,6 @@ export const AppLayout: React.FC = () => {
     );
   }
 
-  // If not authenticated, don't render anything (redirect happens in useEffect)
   if (!user) {
     return null;
   }

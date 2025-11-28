@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
+import {
+  Card,
+  CardHeader,
+  CardTitle,
   CardContent,
 } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -12,11 +12,11 @@ import { getServiceRecords } from '../services/serviceRecordService';
 import { getAttachments, openAttachment } from '../services/attachmentService';
 import { ServiceRecord, Attachment } from '../types';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  FileIcon, 
-  Download, 
-  Paperclip, 
+import {
+  Search,
+  FileIcon,
+  Download,
+  Paperclip,
   Calendar,
   ExternalLink
 } from 'lucide-react';
@@ -33,7 +33,8 @@ export const AttachmentsPage: React.FC = () => {
       try {
         setLoading(true);
         // Busca todos os atendimentos
-        const records = await getServiceRecords();
+        // Busca todos os atendimentos (limitado a 1000 por enquanto)
+        const { records } = await getServiceRecords(1, 1000);
         // Para cada atendimento, busca os anexos
         let allAttachments: (Attachment & { record: ServiceRecord })[] = [];
         for (const record of records) {
@@ -63,7 +64,7 @@ export const AttachmentsPage: React.FC = () => {
   useEffect(() => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const filtered = attachments.filter(attachment => 
+      const filtered = attachments.filter(attachment =>
         (attachment.filename?.toLowerCase().includes(term) ?? false) ||
         (attachment.record?.orderNumber?.toLowerCase().includes(term) ?? false) ||
         (attachment.record?.client?.toLowerCase().includes(term) ?? false) ||
@@ -127,7 +128,7 @@ export const AttachmentsPage: React.FC = () => {
         </div>
       )}
 
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         variants={containerVariants}
         initial="hidden"
@@ -155,8 +156,8 @@ export const AttachmentsPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={() => openAttachment(attachment.url)}
                         title="Abrir"
@@ -164,7 +165,7 @@ export const AttachmentsPage: React.FC = () => {
                         <Download className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="mt-auto">
                       <div className="border-t pt-3 space-y-2">
                         <div className="flex items-center">
@@ -179,7 +180,7 @@ export const AttachmentsPage: React.FC = () => {
                             {new Date(attachment.createdAt ?? attachment.created_at).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
-                        <Link 
+                        <Link
                           to={`/service-records/${attachment.record.id}`}
                           className="text-blue-600 hover:text-blue-800 text-sm flex items-center mt-2"
                         >
@@ -198,7 +199,7 @@ export const AttachmentsPage: React.FC = () => {
             {searchTerm ? (
               <>
                 Nenhum anexo encontrado com os filtros aplicados.
-                <button 
+                <button
                   className="ml-2 text-blue-600 hover:underline"
                   onClick={() => setSearchTerm('')}
                 >

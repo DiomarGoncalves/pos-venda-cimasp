@@ -1,111 +1,41 @@
 import { ServiceRecord } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-// Função utilitária para converter camelCase para snake_case
-function toSnakeCase(obj: any): any {
-  if (!obj || typeof obj !== 'object') return obj;
-  const newObj: any = {};
-  for (const key in obj) {
-    if (Object.hasOwn(obj, key)) {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      newObj[snakeKey] = obj[key];
-    }
-  }
-  return newObj;
-}
-
-// Garante que todos os campos obrigatórios do SQL estejam presentes
-function fillMissingFieldsSnakeCase(obj: any): any {
-  const requiredFields = [
-    'id', 'order_number', 'equipment', 'chassis_plate', 'client', 'manufacturing_date',
-    'call_opening_date', 'technician', 'assistance_type', 'assistance_location', 'contact_person',
-    'phone', 'reported_issue', 'supplier', 'part', 'observations', 'service_date',
-    'responsible_technician', 'part_labor_cost', 'travel_freight_cost', 'part_return',
-    'supplier_warranty', 'technical_solution', 'created_by', 'created_at', 'updated_at'
-  ];
-  const filled: any = { ...obj };
-  for (const field of requiredFields) {
-    if (!(field in filled)) {
-      // Para campos numéricos, use 0; para outros, use string vazia ou null
-      if (field === 'part_labor_cost' || field === 'travel_freight_cost' || field === 'supplier_warranty') {
-        filled[field] = 0;
-      } else {
-        filled[field] = '';
-      }
-    }
-  }
-  return filled;
-}
-
-export const createServiceRecord = async (record: Omit<ServiceRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceRecord> => {
+export const createServiceRecord = async (record: Omit<ServiceRecord, 'id' | 'created_at' | 'updated_at'>): Promise<ServiceRecord> => {
   const newRecord: ServiceRecord = {
     ...record,
     id: uuidv4(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
-  try {
-    // Converte para snake_case e preenche campos obrigatórios
-    const snake = toSnakeCase(newRecord);
-    const filled = fillMissingFieldsSnakeCase(snake);
-    await window.electronAPI.addServiceRecord(filled);
-    return newRecord;
-  } catch (error) {
-    console.error('Create service record error:', error);
-    return newRecord;
-  }
+  const saved = await window.electronAPI.addServiceRecord(newRecord);
+  return saved;
 };
 
-export const getServiceRecords = async (filters?: Partial<ServiceRecord>): Promise<ServiceRecord[]> => {
-  try {
-    let records = await window.electronAPI.getServiceRecords();
-    if (filters) {
-      records = records.filter((record: any) =>
-        Object.entries(filters).every(
-          ([key, value]) => value === undefined || value === null || value === '' || record[key] === value
-        )
-      );
-    }
-    return records;
-  } catch (error) {
-    console.error('Get service records error:', error);
-    return [];
-  }
+export const getServiceRecords = async (page = 1, limit = 50, search = ''): Promise<{ records: ServiceRecord[], total: number, page: number, totalPages: number }> => {
+  return await window.electronAPI.getServiceRecords(page, limit, search);
 };
 
 export const getServiceRecordById = async (id: string): Promise<ServiceRecord | null> => {
-  try {
-    const records = await window.electronAPI.getServiceRecords();
-    return records.find((record: any) => record.id === id) || null;
-  } catch (error) {
-    console.error('Get service record by ID error:', error);
-    return null;
-  }
+  // Busca apenas o registro específico se possível, ou busca na lista (menos eficiente mas mantém compatibilidade)
+  // Idealmente, deveríamos ter um endpoint específico para buscar por ID no backend
+  const { records } = await window.electronAPI.getServiceRecords(1, 1000, ''); // Busca provisória
+  return records.find((r: ServiceRecord) => r.id === id) || null;
 };
 
 export const updateServiceRecord = async (id: string, record: Partial<ServiceRecord>): Promise<ServiceRecord | null> => {
-  try {
-    // Converte para snake_case e preenche campos obrigatórios
-    const updated = { ...record, updatedAt: new Date().toISOString() };
-    const snake = toSnakeCase(updated);
-    const filled = fillMissingFieldsSnakeCase(snake);
-    await window.electronAPI.updateServiceRecord(id, filled);
-    // Retorne o registro atualizado (opcional: buscar novamente)
-    const records = await window.electronAPI.getServiceRecords();
-    return records.find((r: any) => r.id === id) || null;
-  } catch (error) {
-    console.error('Update service record error:', error);
-    return null;
+  const success = await window.electronAPI.updateServiceRecord(id, record);
+  if (success) {
+    return getServiceRecordById(id);
   }
+  return null;
 };
 
 export const deleteServiceRecord = async (id: string): Promise<boolean> => {
-  try {
-    await window.electronAPI.deleteServiceRecord(id);
-    return true;
-  } catch (error) {
-    console.error('Delete service record error:', error);
-    return false;
-  }
+  return await window.electronAPI.deleteServiceRecord(id);
+};
+
+export const getUsers = async () => {
+  return await window.electronAPI.getUsers();
 };

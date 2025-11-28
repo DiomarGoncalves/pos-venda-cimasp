@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 
 interface LoginFormProps {
   onToggleForm: () => void;
@@ -21,24 +22,35 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
   const [localError, setLocalError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<LoginFormValues>({
     defaultValues: {
       username: '',
       password: '',
     }
   });
 
+  const username = watch('username');
+  const password = watch('password');
+
   useEffect(() => {
     if (user) {
-      navigate('/'); // Redireciona para a página inicial após login
+      console.log('✅ Usuário autenticado, redirecionando para dashboard');
+      navigate('/');
     }
   }, [user, navigate]);
 
   const onSubmit = async (data: LoginFormValues) => {
+    console.log('🔐 Tentando fazer login com:', { username: data.username });
     setLocalError(null);
+    
     const result = await login(data.username, data.password);
-    if (!result && !authError) {
-      setLocalError('Usuário ou senha inválidos');
+    
+    if (!result) {
+      const errorMsg = authError || 'Usuário ou senha inválidos';
+      console.error('❌ Erro no login:', errorMsg);
+      setLocalError(errorMsg);
+    } else {
+      console.log('✅ Login bem-sucedido!');
     }
   };
 
@@ -57,7 +69,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Usuário"
-              placeholder="Seu usuário"
+              placeholder="Digite seu usuário"
+              autoComplete="username"
               error={errors.username?.message}
               {...register('username', { 
                 required: 'Usuário é obrigatório',
@@ -71,7 +84,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
             <Input
               label="Senha"
               type="password"
-              placeholder="********"
+              placeholder="Digite sua senha"
+              autoComplete="current-password"
               error={errors.password?.message}
               {...register('password', { 
                 required: 'Senha é obrigatória',
@@ -83,13 +97,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
             />
             
             {(authError || localError) && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm">
-                {authError || localError}
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Erro de autenticação</p>
+                  <p className="text-xs mt-1">{authError || localError}</p>
+                </div>
               </div>
             )}
             
-            <Button type="submit" className="w-full" isLoading={loading} disabled={loading}>
-              Entrar
+            <Button 
+              type="submit" 
+              className="w-full" 
+              isLoading={loading} 
+              disabled={loading || !username || !password}
+            >
+              {loading ? 'Autenticando...' : 'Entrar'}
             </Button>
           </form>
         </CardContent>
@@ -99,7 +122,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
             <button
               type="button"
               onClick={onToggleForm}
-              className="text-blue-700 hover:underline focus:outline-none"
+              className="text-blue-700 hover:underline focus:outline-none font-medium"
               disabled={loading}
             >
               Registre-se
