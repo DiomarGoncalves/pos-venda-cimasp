@@ -102,6 +102,7 @@ export interface ServiceRecord {
   createdBy?: string;
   created_by?: string;
   additionalCosts?: AdditionalCost[];
+  additional_costs?: AdditionalCost[];
 }
 
 // Additional cost model

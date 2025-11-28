@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
+import {
+  Card,
+  CardHeader,
+  CardTitle,
   CardContent,
   CardFooter
 } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { 
-  getServiceRecordById, 
-  deleteServiceRecord 
+import {
+  getServiceRecordById,
+  deleteServiceRecord
 } from '../services/serviceRecordService';
 import { downloadAttachment, getAttachments, deleteAttachment } from '../services/attachmentService';
 import { ServiceRecord, Attachment, AdditionalCost } from '../types';
@@ -42,35 +42,35 @@ export const ServiceRecordDetailPage: React.FC = () => {
         // Tenta buscar o registro com retry em caso de falha
         let serviceRecord = null;
         let attempts = 0;
-        const maxAttempts = 3;
-        
+        const maxAttempts = 5;
+
         while (!serviceRecord && attempts < maxAttempts) {
           try {
             serviceRecord = await getServiceRecordById(id);
             if (!serviceRecord) {
               // Se não encontrou, aguarda um pouco e tenta novamente
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 1500));
               attempts++;
             }
           } catch (err) {
             attempts++;
             if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 1500));
             } else {
               throw err;
             }
           }
         }
-        
+
         if (!serviceRecord) {
           // Se ainda não encontrou após as tentativas, redireciona para a lista
           console.warn('Atendimento não encontrado após múltiplas tentativas:', id);
           navigate('/service-records', { replace: true });
           return;
         }
-        
+
         setRecord(serviceRecord);
-        
+
         // Load attachments
         const recordAttachments = await getAttachments(id);
         setAttachments(recordAttachments);
@@ -210,7 +210,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -260,8 +260,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             onClick={() => navigate(-1)}
           >
@@ -271,7 +271,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
             Atendimento {record.orderNumber}
           </h1>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Link to={`/service-records/${id}/edit`}>
             <Button variant="outline">
@@ -279,8 +279,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
               Editar
             </Button>
           </Link>
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={() => setShowDeleteConfirm(true)}
             isLoading={deleting}
           >
@@ -340,7 +340,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <User className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -348,7 +348,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.technician}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <Tool className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -356,7 +356,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.assistance_type}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <MapPin className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -364,7 +364,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.assistance_location || '—'}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <User className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -372,7 +372,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.contact_person || '—'}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -381,7 +381,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {record.observations && (
                 <div className="mt-6 border-t pt-4">
                   <h3 className="text-sm font-medium text-gray-500">Observações</h3>
@@ -409,7 +409,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <User className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -417,7 +417,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.responsible_technician || '—'}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <DollarSign className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -430,7 +430,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <DollarSign className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -443,7 +443,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <DollarSign className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -451,7 +451,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1 text-lg font-semibold text-blue-600">
                       {(() => {
                         const baseCost = (record.part_labor_cost || 0) + (record.travel_freight_cost || 0);
-                        const additionalCost = record.additional_costs ? 
+                        const additionalCost = record.additional_costs ?
                           record.additional_costs.reduce((sum, cost) => sum + cost.amount, 0) : 0;
                         const total = baseCost + additionalCost;
                         return `R$ ${total.toFixed(2).replace('.', ',')}`;
@@ -459,7 +459,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <Clipboard className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                   <div>
@@ -467,7 +467,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                     <p className="mt-1">{record.part_return || '—'}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   {(record.supplier_warranty === 1 || record.supplier_warranty === true) ? (
                     <Check className="h-5 w-5 text-green-600 mt-0.5 mr-2" />
@@ -520,9 +520,8 @@ export const ServiceRecordDetailPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center">
-                <div className={`p-3 rounded-full ${
-                  record.service_date ? 'bg-green-100' : 'bg-orange-100'
-                }`}>
+                <div className={`p-3 rounded-full ${record.service_date ? 'bg-green-100' : 'bg-orange-100'
+                  }`}>
                   {record.service_date ? (
                     <Check className="h-6 w-6 text-green-600" />
                   ) : (
@@ -586,24 +585,24 @@ export const ServiceRecordDetailPage: React.FC = () => {
                         <span className="text-sm truncate max-w-[150px]">{attachment.filename}</span>
                       </div>
                       <div className="flex space-x-1">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleViewAttachment(attachment.id, attachment.filename)}
                           title="Visualizar"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => downloadAttachment(attachment.id, attachment.filename)}
                           title="Baixar"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => setAttachmentToDelete(attachment.id)}
                           className="text-red-600"
@@ -620,7 +619,7 @@ export const ServiceRecordDetailPage: React.FC = () => {
                   Nenhum anexo disponível
                 </p>
               )}
-              
+
               <div className="mt-4">
                 <Link to={`/service-records/${id}/edit`}>
                   <Button variant="outline" size="sm" className="w-full">

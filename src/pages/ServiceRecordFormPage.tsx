@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardContent,
-  CardFooter
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent
 } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
 import { Button } from '../components/ui/Button';
 import { ServiceRecord, AdditionalCost } from '../types';
-import { 
-  createServiceRecord, 
-  getServiceRecordById, 
-  updateServiceRecord 
+import {
+  createServiceRecord,
+  getServiceRecordById,
+  updateServiceRecord
 } from '../services/serviceRecordService';
 import { useAuth } from '../contexts/AuthContext';
 import { FileUpload } from '../components/ui/FileUpload';
@@ -33,7 +32,7 @@ export const ServiceRecordFormPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [additionalCosts, setAdditionalCosts] = useState<AdditionalCost[]>([]);
-  
+
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ServiceRecord>();
 
   useEffect(() => {
@@ -50,11 +49,11 @@ export const ServiceRecordFormPage: React.FC = () => {
             if (manufacturingDate && manufacturingDate.length > 10) {
               manufacturingDate = manufacturingDate.slice(0, 10);
             }
-            
+
             // Carrega custos adicionais
             const costs = record.additional_costs || [];
             setAdditionalCosts(costs);
-            
+
             reset({
               id: record.id,
               orderNumber: record.orderNumber ?? record.order_number ?? '',
@@ -122,28 +121,62 @@ export const ServiceRecordFormPage: React.FC = () => {
 
       if (isEditing && id) {
         const { createdBy, ...updateData } = data;
-        // Garante que supplierWarranty seja convertido para inteiro
-        const processedData = {
-          ...updateData,
-          manufacturingDate,
-          additional_costs: additionalCosts,
+        // Converte camelCase para snake_case para o backend
+        const processedData: any = {
+          order_number: updateData.orderNumber || '',
+          equipment: updateData.equipment || '',
+          chassis_plate: updateData.chassisPlate || '',
+          client: updateData.client || '',
+          manufacturing_date: manufacturingDate,
+          call_opening_date: updateData.callOpeningDate || '',
+          technician: updateData.technician || '',
+          assistance_type: updateData.assistanceType || '',
+          assistance_location: updateData.assistanceLocation || '',
+          contact_person: updateData.contactPerson || '',
+          phone: updateData.phone || '',
+          reported_issue: updateData.reportedIssue || '',
+          supplier: updateData.supplier || '',
+          part: updateData.part || '',
+          observations: updateData.observations || '',
+          service_date: updateData.serviceDate || '',
+          responsible_technician: updateData.responsibleTechnician || '',
+          part_labor_cost: updateData.partLaborCost || 0,
+          travel_freight_cost: updateData.travelFreightCost || 0,
+          part_return: updateData.partReturn || '',
           supplier_warranty: updateData.supplierWarranty ? 1 : 0,
-        };
-        savedRecord = await updateServiceRecord(id, {
-          ...processedData,
-        } as ServiceRecord);
-      } else {
-        // Garante que supplierWarranty seja convertido para inteiro
-        const processedData = {
-          ...data,
-          createdBy: user?.id || '',
-          manufacturingDate,
+          technical_solution: updateData.technicalSolution || '',
           additional_costs: additionalCosts,
-          supplier_warranty: data.supplierWarranty ? 1 : 0,
         };
-        savedRecord = await createServiceRecord({
-          ...processedData,
-        });
+        savedRecord = await updateServiceRecord(id, processedData);
+      } else {
+        // Converte camelCase para snake_case para o backend
+        const processedData: any = {
+          order_number: data.orderNumber || '',
+          equipment: data.equipment || '',
+          chassis_plate: data.chassisPlate || '',
+          client: data.client || '',
+          manufacturing_date: manufacturingDate,
+          call_opening_date: data.callOpeningDate || '',
+          technician: data.technician || '',
+          assistance_type: data.assistanceType || '',
+          assistance_location: data.assistanceLocation || '',
+          contact_person: data.contactPerson || '',
+          phone: data.phone || '',
+          reported_issue: data.reportedIssue || '',
+          supplier: data.supplier || '',
+          part: data.part || '',
+          observations: data.observations || '',
+          service_date: data.serviceDate || '',
+          responsible_technician: data.responsibleTechnician || '',
+          part_labor_cost: data.partLaborCost || 0,
+          travel_freight_cost: data.travelFreightCost || 0,
+          part_return: data.partReturn || '',
+          supplier_warranty: data.supplierWarranty ? 1 : 0,
+          technical_solution: data.technicalSolution || '',
+          additional_costs: additionalCosts,
+          created_by: user?.id || '',
+        };
+        savedRecord = await createServiceRecord(processedData);
       }
 
       if (!savedRecord) {
@@ -160,10 +193,11 @@ export const ServiceRecordFormPage: React.FC = () => {
       // Aguarda um pouco para garantir que o registro esteja disponível
       setTimeout(() => {
         navigate(`/service-records/${savedRecord.id}`);
-      }, 500);
+      }, 1000);
     } catch (error) {
       console.error('Error saving service record:', error);
-      setSaveError('Erro ao salvar o atendimento. Tente novamente.');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar o atendimento. Tente novamente.';
+      setSaveError(`Erro ao salvar atendimento: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -187,7 +221,7 @@ export const ServiceRecordFormPage: React.FC = () => {
   };
 
   const updateAdditionalCost = (id: string, field: 'description' | 'amount', value: string | number) => {
-    setAdditionalCosts(additionalCosts.map(cost => 
+    setAdditionalCosts(additionalCosts.map(cost =>
       cost.id === id ? { ...cost, [field]: value } : cost
     ));
   };
@@ -220,8 +254,8 @@ export const ServiceRecordFormPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
           onClick={() => navigate(-1)}
         >
@@ -245,13 +279,13 @@ export const ServiceRecordFormPage: React.FC = () => {
                   {...register('orderNumber', { required: 'Campo obrigatório' })}
                   error={errors.orderNumber?.message}
                 />
-                
+
                 <Input
                   label="Equipamento"
                   {...register('equipment', { required: 'Campo obrigatório' })}
                   error={errors.equipment?.message}
                 />
-                
+
                 <Input
                   label="Chassi / Placa"
                   {...register('chassisPlate')}
@@ -264,7 +298,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                   {...register('client', { required: 'Campo obrigatório' })}
                   error={errors.client?.message}
                 />
-                
+
                 <Input
                   label="Data de Fabricação"
                   type="date"
@@ -279,7 +313,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                   {...register('callOpeningDate', { required: 'Campo obrigatório' })}
                   error={errors.callOpeningDate?.message}
                 />
-                
+
                 <Input
                   label="Técnico"
                   {...register('technician', { required: 'Campo obrigatório' })}
@@ -301,12 +335,12 @@ export const ServiceRecordFormPage: React.FC = () => {
                   {...register('assistanceType', { required: 'Campo obrigatório' })}
                   error={errors.assistanceType?.message}
                 />
-                
+
                 <Input
                   label="Local da Assistência"
                   {...register('assistanceLocation')}
                 />
-                
+
                 <Select
                   label="Problema Apresentado"
                   options={reportedIssueOptions}
@@ -320,7 +354,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                   label="Contato"
                   {...register('contactPerson')}
                 />
-                
+
                 <Input
                   label="Telefone"
                   {...register('phone')}
@@ -344,12 +378,12 @@ export const ServiceRecordFormPage: React.FC = () => {
                   label="Fornecedor"
                   {...register('supplier')}
                 />
-                
+
                 <Input
                   label="Peça"
                   {...register('part')}
                 />
-                
+
                 <Input
                   label="Data do Atendimento"
                   type="date"
@@ -362,7 +396,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                   label="Técnico Responsável"
                   {...register('responsibleTechnician')}
                 />
-                
+
                 <Input
                   label="Custo Peça/Mão de Obra"
                   type="number"
@@ -371,7 +405,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                     setValueAs: value => value === '' ? 0 : parseFloat(value)
                   })}
                 />
-                
+
                 <Input
                   label="Custo Viagem/Frete"
                   type="number"
@@ -387,7 +421,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                   label="Devolução de Peça"
                   {...register('partReturn')}
                 />
-                
+
                 <div className="flex items-center space-x-2 pt-7">
                   <input
                     type="checkbox"
@@ -419,7 +453,7 @@ export const ServiceRecordFormPage: React.FC = () => {
                     Adicionar Custo
                   </Button>
                 </div>
-                
+
                 {additionalCosts.length > 0 && (
                   <div className="space-y-3">
                     {additionalCosts.map((cost) => (
